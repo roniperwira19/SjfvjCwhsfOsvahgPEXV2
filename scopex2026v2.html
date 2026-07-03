@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCOPEX VOL-II - Secure Portal (Dinamis Cloud)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- FIREBASE SDK (Menggunakan versi kompatibilitas agar mudah diintegrasikan) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+</head>
+<body class="bg-gray-950 text-gray-100 font-sans min-h-screen flex flex-col">
+
+    <!-- HEADER / NAVIGATION -->
+    <header class="bg-gray-900 border-b border-gray-800 sticky top-0 z-50 shadow-xl">
+        <div class="container mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="text-center sm:text-left">
+                <h1 class="text-2xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-500 to-yellow-500">
+                    ⚜️ SCOPEX VOL-II
+                </h1>
+                <p class="text-xs text-gray-400 mt-0.5 font-medium tracking-wide">Sistem Rekapitulasi Internal Cloud & Terproteksi</p>
+            </div>
+            
+            <div class="flex items-center gap-3" id="auth-nav-zone">
+                <!-- Diisi dinamis oleh JS berdasarkan status login -->
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="container mx-auto px-4 py-6 flex-grow flex flex-col justify-center">
+        
+        <!-- NOTIFICATION TOAST -->
+        <div id="toast" class="hidden fixed bottom-5 right-5 bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-2xl z-50 flex items-center gap-2 transition-all duration-300">
+            <i class="fa-solid fa-circle-check"></i> <span id="toast-msg">Aksi berhasil!</span>
+        </div>
+
+        <!-- VIEW 1: GATEKEEPER LOGIN PAGE -->
+        <section id="view-login" class="max-w-md w-full mx-auto my-6 bg-gray-900 border border-gray-800 rounded-2xl p-8 shadow-2xl">
+            <div class="text-center mb-6">
+                <div class="w-12 h-12 bg-amber-500/10 border border-amber-500/30 text-amber-500 rounded-full flex items-center justify-center text-xl mx-auto mb-3">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-100">Portal Kejuaraan Terkunci</h2>
+                <p class="text-xs text-gray-400 mt-1">Silakan masuk menggunakan Nama Regu dan Nomor Peserta Anda.</p>
+            </div>
+            
+            <form id="form-login" class="space-y-4">
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">Nama Regu / Username Admin</label>
+                    <input type="text" id="login-username" required class="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500 text-gray-100" placeholder="Masukkan nama regu atau admin...">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">Password / Nomor Peserta</label>
+                    <div class="relative">
+                        <input type="password" id="login-password" required class="w-full bg-gray-950 border border-gray-800 rounded-xl pl-4 pr-12 py-3 text-sm focus:outline-none focus:border-amber-500 text-gray-100" placeholder="••••••••">
+                        <button type="button" onclick="togglePasswordVisibility('login-password', 'login-pwd-icon')" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition px-1 py-2">
+                            <i id="login-pwd-icon" class="fa-solid fa-eye-slash text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="login-error" class="hidden text-xs text-red-400 font-medium bg-red-950/50 border border-red-900/50 p-3 rounded-lg">
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> Nama Regu, Admin, atau Password salah.
+                </div>
+                <button type="submit" class="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-gray-950 font-black py-3 rounded-xl transition shadow-lg shadow-orange-950/20 text-sm tracking-wider uppercase">
+                    LOGIN <i class="fa-solid fa-right-to-bracket ml-1"></i>
+                </button>
+            </form>
+        </section>
+
+        <!-- VIEW 2: LIVE REPORT -->
+        <section id="view-live" class="hidden space-y-6 w-full animate-fade-in">
+            <!-- Filter Kategori -->
+            <div class="bg-gray-900 border border-gray-800 p-4 rounded-2xl flex flex-col sm:flex-row gap-4 items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-trophy text-amber-500"></i>
+                    <span class="text-xs font-bold uppercase tracking-wider text-gray-300">Live Kejuaraan Materi (Cloud terhubung)</span>
+                </div>
+                <div class="flex flex-wrap gap-1.5" id="category-filters">
+                    <!-- Tombol kategori di-render dinamis -->
+                </div>
+            </div>
+
+            <!-- Banner info Peserta jika login -->
+            <div id="peserta-welcome-banner" class="hidden bg-indigo-950/40 border border-indigo-900/60 p-4 rounded-xl items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-sm">⚜️</div>
+                    <div>
+                        <h4 class="text-sm font-bold text-indigo-300">Mode Pelacakan Regu Aktif</h4>
+                        <p class="text-xs text-gray-400">Baris dengan nama regu Anda (<span id="user-highlight-name" class="text-amber-400 font-semibold"></span>) otomatis diwarnai emas.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid 5 Mata Lomba -->
+            <div id="live-report-grid" class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <!-- Render Otomatis Papan Skor Juri -->
+            </div>
+        </section>
+
+        <!-- VIEW 3: ADMIN PANEL -->
+        <section id="view-admin" class="hidden space-y-6 w-full">
+            <div class="border-b border-gray-800 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h2 class="text-2xl font-black text-gray-100 flex items-center gap-2"><i class="fa-solid fa-sliders text-amber-500"></i> Panel Kontrol Juri & Admin</h2>
+                    <p class="text-xs text-gray-400">Kelola master database peserta, input poin nilai, dan reset sistem.</p>
+                </div>
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <button onclick="loadSimulasiData()" class="flex-1 sm:flex-none bg-blue-600/20 border border-blue-500/30 hover:bg-blue-600/30 text-blue-400 text-xs font-bold px-4 py-2.5 rounded-xl transition">
+                        <i class="fa-solid fa-database mr-1"></i> Isi Data Simulasi
+                    </button>
+                    <button onclick="clearDatabase()" class="flex-1 sm:flex-none bg-red-600/20 border border-red-500/30 hover:bg-red-600/30 text-red-400 text-xs font-bold px-4 py-2.5 rounded-xl transition">
+                        <i class="fa-solid fa-trash mr-1"></i> Kosongkan DB
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Form Tambah Regu -->
+                <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl shadow-xl space-y-4 h-fit">
+                    <h3 class="text-base font-bold border-b border-gray-800 pb-2 text-amber-400"><i class="fa-solid fa-user-plus mr-1"></i> Registrasi Regu Baru</h3>
+                    <form id="form-add-peserta" class="space-y-3.5">
+                        <div>
+                            <label class="block text-[11px] font-bold uppercase text-gray-400 mb-1">Kategori Tingkat</label>
+                            <select id="p-kategori" onchange="generateAutomatedNoPeserta()" class="w-full bg-gray-950 border border-gray-800 rounded-lg p-2.5 text-xs focus:outline-none focus:border-amber-500 text-white">
+                                <option value="Putra SD">Putra SD</option>
+                                <option value="Putri SD">Putri SD</option>
+                                <option value="Putra SMP">Putra SMP</option>
+                                <option value="Putri SMP">Putri SMP</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold uppercase text-gray-400 mb-1">No Peserta / ID Regu (Otomatis)</label>
+                            <input type="text" id="p-nopeserta" readonly class="w-full bg-gray-900 border border-gray-800 rounded-lg p-2.5 text-xs text-amber-500 font-mono font-bold uppercase cursor-not-allowed select-none" placeholder="ID-00">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold uppercase text-gray-400 mb-1">Nama Regu</label>
+                            <input type="text" id="p-nama" required class="w-full bg-gray-950 border border-gray-800 rounded-lg p-2.5 text-xs focus:outline-none focus:border-amber-500 text-white" placeholder="Contoh: Elang / Dahlia">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold uppercase text-gray-400 mb-1">Asal Sekolah / Pangkalan</label>
+                            <input type="text" id="p-pangkalan" required class="w-full bg-gray-950 border border-gray-800 rounded-lg p-2.5 text-xs focus:outline-none focus:border-amber-500 text-white" placeholder="Contoh: SDN 01 Jakarta">
+                        </div>
+                        <button type="submit" class="w-full bg-gray-800 hover:bg-gray-750 text-amber-400 border border-amber-500/20 font-bold py-2.5 rounded-lg text-xs transition">
+                            Simpan Data Regu ke Cloud
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Form Input Skor Nilai -->
+                <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl shadow-xl space-y-4 lg:col-span-2">
+                    <h3 class="text-base font-bold border-b border-gray-800 pb-2 text-orange-400"><i class="fa-solid fa-pen-to-square mr-1"></i> Formulir Input & Pembaruan Skor Juri</h3>
+                    <form id="form-input-nilai" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[11px] font-bold uppercase text-gray-400 mb-1">1. Pilih Kategori</label>
+                            <select id="score-kategori" onchange="updateAdminPesertaDropdown()" class="w-full bg-gray-950 border border-gray-800 rounded-lg p-2.5 text-xs focus:outline-none focus:border-amber-500 text-white">
+                                <option value="Putra SD">Putra SD</option>
+                                <option value="Putri SD">Putri SD</option>
+                                <option value="Putra SMP">Putra SMP</option>
+                                <option value="Putri SMP">Putri SMP</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold uppercase text-gray-400 mb-1">2. Pilih Nama Regu</label>
+                            <select id="score-peserta" required class="w-full bg-gray-950 border border-gray-800 rounded-lg p-2.5 text-xs focus:outline-none focus:border-amber-500 text-white">
+                                <!-- Terisi dinamis -->
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold uppercase text-gray-400 mb-1">3. Pilih Mata Lomba</label>
+                            <select id="score-lomba" class="w-full bg-gray-950 border border-gray-800 rounded-lg p-2.5 text-xs focus:outline-none focus:border-amber-500 text-white">
+                                <option value="Peta Lapangan">Peta Lapangan</option>
+                                <option value="Bank Soal">Bank Soal</option>
+                                <option value="Semaphore">Semaphore</option>
+                                <option value="Morse">Morse</option>
+                                <option value="Sandi">Sandi</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold uppercase text-gray-400 mb-1">4. Skor Nilai Akhir (0 - 100)</label>
+                            <input type="number" id="score-nilai" min="0" max="100" step="0.1" required class="w-full bg-gray-950 border border-gray-800 rounded-lg p-2.5 text-xs focus:outline-none focus:border-amber-500 text-white" placeholder="0.0">
+                        </div>
+                        <div class="sm:col-span-2 pt-2">
+                            <button type="submit" class="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-gray-950 font-black py-3 rounded-xl text-xs uppercase tracking-wider transition">
+                                Publikasikan Nilai Ke Cloud Live Board
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Daftar Master Tabel Peserta -->
+            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl">
+                <h3 class="text-base font-bold mb-4 text-gray-300"><i class="fa-solid fa-list-check mr-1"></i> Manajer Seluruh Data Kontestan</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="text-gray-400 border-b border-gray-800 uppercase tracking-wider font-semibold">
+                                <th class="p-3">No Peserta (Password)</th>
+                                <th class="p-3">Nama Regu</th>
+                                <th class="p-3">Kategori</th>
+                                <th class="p-3">Asal Sekolah</th>
+                                <th class="p-3">Nilai Masuk</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-table-peserta" class="divide-y divide-gray-850 text-gray-300">
+                            <!-- Diisi dinamis -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-gray-900 border-t border-gray-800 text-center py-4 text-[11px] text-gray-500 font-medium mt-auto">
+        &copy; 2026 SCOPEX VOL-II. Sistem Rekapitulasi Realtime Cloud by RTD.
+    </footer>
+
+    <!-- LOGIK SISTEM (JAVASCRIPT BACKEND INTEGRATION) -->
+    <script>
+        // === PASTE CONFIGURATION FIREBASE KAMU DI SINI ===
+        const firebaseConfig = {
+            apiKey: "AIzaSyDBeDctmH9RjChNBTvp0hsbIVwizTPxeDg",
+            authDomain: "scopex2026-d929a.firebaseapp.com",
+            databaseURL: "https://scopex2026-d929a-default-rtdb.firebaseio.com",
+            projectId: "scopex2026-d929a",
+            storageBucket: "scopex2026-d929a.firebasestorage.app",
+            messagingSenderId: "271534162581",
+            appId: "1:271534162581:web:8b2f748c1974f0dbb2519c",
+            measurementId: "G-1GGNVGWBF9"
+        };
+        // ================================================
+
+        // Inisialisasi Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        const KATEGORI_LIST = ["Putra SD", "Putri SD", "Putra SMP", "Putri SMP"];
+        const LOMBA_LIST = ["Peta Lapangan", "Bank Soal", "Semaphore", "Morse", "Sandi"];
+
+        let state = {
+            user: JSON.parse(sessionStorage.getItem('scopex_user')) || { role: 'guest', username: null },
+            activeCategory: "Putra SD",
+            peserta: [],
+            nilai: {}
+        };
+
+        // Sinkronisasi data real-time langsung dari Cloud Database Firebase
+        db.ref('scopex_data').on('value', (snapshot) => {
+            const cloudData = snapshot.val() || {};
+            state.peserta = cloudData.peserta || [];
+            state.nilai = cloudData.nilai || {};
+            
+            // Re-render UI setiap kali ada perubahan data di cloud database
+            updateAdminPesertaDropdown();
+            renderAdminTable();
+            renderLiveReport();
+            generateAutomatedNoPeserta();
+        });
+
+        document.addEventListener("DOMContentLoaded", () => {
+            initCategoryFilters();
+            renderAuthUI();
+            checkGateRoute();
+        });
+
+        function togglePasswordVisibility(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (input.type === "password") {
+                input.type = "text";
+                icon.className = "fa-solid fa-eye text-sm text-amber-500";
+            } else {
+                input.type = "password";
+                icon.className = "fa-solid fa-eye-slash text-sm text-gray-500";
+            }
+        }
+
+        function checkGateRoute() {
+            document.getElementById('view-login').classList.add('hidden');
+            document.getElementById('view-live').classList.add('hidden');
+            document.getElementById('view-admin').classList.add('hidden');
+
+            if (state.user.role === 'guest') {
+                document.getElementById('view-login').classList.remove('hidden');
+                return;
+            }
+            if (state.user.role === 'admin') {
+                document.getElementById('view-admin').classList.remove('hidden');
+                return;
+            }
+            if (state.user.role === 'peserta') {
+                document.getElementById('view-live').classList.remove('hidden');
+                return;
+            }
+        }
+
+        function generateAutomatedNoPeserta() {
+            const kategori = document.getElementById('p-kategori').value;
+            const inputNoPeserta = document.getElementById('p-nopeserta');
+            if(!inputNoPeserta) return;
+            
+            let prefix = "";
+            switch (kategori) {
+                case "Putra SD": prefix = "PASD"; break;
+                case "Putri SD": prefix = "PISD"; break;
+                case "Putra SMP": prefix = "PASMP"; break;
+                case "Putri SMP": prefix = "PISMP"; break;
+            }
+
+            const countExisting = state.peserta.filter(p => p.kategori === kategori).length;
+            const nextSequence = countExisting + 1;
+            const sequenceString = String(nextSequence).padStart(2, '0');
+            inputNoPeserta.value = prefix + sequenceString;
+        }
+
+        function renderAuthUI() {
+            const nav = document.getElementById('auth-nav-zone');
+            if (state.user.role === 'guest') {
+                nav.innerHTML = `
+                    <span class="text-xs font-semibold text-red-400 bg-red-950/40 px-3 py-1.5 rounded-xl border border-red-900/40">
+                        <i class="fa-solid fa-lock-open mr-1"></i> Sesi Terkunci
+                    </span>
+                `;
+            } else {
+                let badgeColor = state.user.role === 'admin' ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20';
+                nav.innerHTML = `
+                    ${state.user.role === 'admin' ? `<button onclick="toggleAdminView('admin')" class="text-xs font-bold text-amber-500 hover:underline px-2"><i class="fa-solid fa-screwdriver-wrench mr-1"></i>Panel Admin</button>` : ''}
+                    ${state.user.role === 'admin' ? `<button onclick="toggleAdminView('live')" class="text-xs font-bold text-gray-400 hover:text-white px-2"><i class="fa-solid fa-eye mr-1"></i>Intip Live Report</button>` : ''}
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-semibold px-2.5 py-1.5 rounded-lg uppercase tracking-wider ${badgeColor}">
+                            <i class="fa-solid fa-user text-[10px] mr-1"></i> ${state.user.username}
+                        </span>
+                        <button onclick="handleLogout()" class="bg-gray-900 border border-gray-800 hover:bg-red-950/40 hover:border-red-900/50 text-gray-400 hover:text-red-400 p-2 rounded-xl transition text-xs" title="Keluar">
+                            <i class="fa-solid fa-power-off"></i>
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function toggleAdminView(target) {
+            document.getElementById('view-live').classList.add('hidden');
+            document.getElementById('view-admin').classList.add('hidden');
+            if (target === 'live') {
+                document.getElementById('view-live').classList.remove('hidden');
+            } else {
+                document.getElementById('view-admin').classList.remove('hidden');
+            }
+        }
+
+        document.getElementById('form-login').onsubmit = function(e) {
+            e.preventDefault();
+            const user = document.getElementById('login-username').value.trim();
+            const pass = document.getElementById('login-password').value.trim();
+            const err = document.getElementById('login-error');
+            err.classList.add('hidden');
+
+            if (user.toLowerCase() === 'admin' && pass === 'admin123') {
+                state.user = { role: 'admin', username: 'Super Admin' };
+                completeLogin();
+                return;
+            }
+
+            const matchPeserta = state.peserta.find(p => 
+                p.nama.toLowerCase() === user.toLowerCase() && 
+                p.noPeserta.toLowerCase() === pass.toLowerCase()
+            );
+
+            if (matchPeserta) {
+                state.user = { role: 'peserta', username: matchPeserta.nama };
+                completeLogin();
+                return;
+            }
+
+            err.classList.remove('hidden');
+        };
+
+        function completeLogin() {
+            sessionStorage.setItem('scopex_user', JSON.stringify(state.user));
+            renderAuthUI();
+            showToast(`Selamat datang, ${state.user.username}!`);
+            checkGateRoute();
+        }
+
+        function handleLogout() {
+            state.user = { role: 'guest', username: null };
+            sessionStorage.removeItem('scopex_user');
+            renderAuthUI();
+            showToast("Sistem dikunci kembali.", "bg-gray-800");
+            checkGateRoute();
+        }
+
+        function initCategoryFilters() {
+            const container = document.getElementById('category-filters');
+            container.innerHTML = "";
+            KATEGORI_LIST.forEach(kat => {
+                const btn = document.createElement('button');
+                btn.className = `btn-filter px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition duration-200`;
+                btn.innerText = kat;
+                btn.onclick = () => {
+                    state.activeCategory = kat;
+                    updateFilterButtonStyles();
+                    renderLiveReport();
+                };
+                container.appendChild(btn);
+            });
+            updateFilterButtonStyles();
+        }
+
+        function updateFilterButtonStyles() {
+            document.querySelectorAll('.btn-filter').forEach(btn => {
+                if (btn.innerText === state.activeCategory.toUpperCase()) {
+                    btn.className = "btn-filter px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-amber-500 to-orange-500 text-gray-950 shadow-lg";
+                } else {
+                    btn.className = "btn-filter px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider bg-gray-800 hover:bg-gray-750 text-gray-300 border border-gray-700/60";
+                }
+            });
+        }
+
+        // AKSI KIRIM DATA KE CLOUD FIREBASE
+        document.getElementById('form-add-peserta').onsubmit = function(e) {
+            e.preventDefault();
+            const noPeserta = document.getElementById('p-nopeserta').value.trim().toUpperCase();
+            const nama = document.getElementById('p-nama').value.trim();
+            const pangkalan = document.getElementById('p-pangkalan').value.trim();
+            const kategori = document.getElementById('p-kategori').value;
+
+            if (state.peserta.some(p => p.noPeserta === noPeserta)) {
+                alert("Nomor Peserta ini sudah terdaftar!");
+                return;
+            }
+
+            state.peserta.push({ noPeserta, nama, pangkalan, kategori });
+            
+            // Simpan ke Firebase
+            db.ref('scopex_data/peserta').set(state.peserta)
+                .then(() => {
+                    document.getElementById('p-nama').value = "";
+                    document.getElementById('p-pangkalan').value = "";
+                    showToast(`Regu ${nama} berhasil disimpan ke Cloud!`);
+                });
+        };
+
+        document.getElementById('form-input-nilai').onsubmit = function(e) {
+            e.preventDefault();
+            const pesertaId = document.getElementById('score-peserta').value;
+            const lomba = document.getElementById('score-lomba').value;
+            const skor = parseFloat(document.getElementById('score-nilai').value);
+
+            if (!pesertaId) {
+                alert("Pilih regu kontestan terlebih dahulu!");
+                return;
+            }
+
+            if (!state.nilai[pesertaId]) state.nilai[pesertaId] = {};
+            state.nilai[pesertaId][lomba] = skor;
+
+            // Simpan ke Firebase
+            db.ref('scopex_data/nilai/' + pesertaId).set(state.nilai[pesertaId])
+                .then(() => {
+                    document.getElementById('score-nilai').value = "";
+                    showToast("Nilai sukses diperbarui di seluruh layar live!");
+                });
+        };
+
+        function updateAdminPesertaDropdown() {
+            const dropdown = document.getElementById('score-peserta');
+            if(!dropdown) return;
+            const kat = document.getElementById('score-kategori').value;
+            dropdown.innerHTML = "";
+
+            const filtered = state.peserta.filter(p => p.kategori === kat);
+            if (filtered.length === 0) {
+                dropdown.innerHTML = `<option value="">-- Tidak ada regu terdaftar --</option>`;
+                return;
+            }
+
+            filtered.forEach(p => {
+                dropdown.innerHTML += `<option value="${p.noPeserta}">${p.nama} (${p.pangkalan})</option>`;
+            });
+        }
+
+        function renderAdminTable() {
+            const tbody = document.getElementById('admin-table-peserta');
+            if(!tbody) return;
+            tbody.innerHTML = "";
+
+            if (state.peserta.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500 italic">Database cloud kosong.</td></tr>`;
+                return;
+            }
+
+            state.peserta.forEach(p => {
+                const countNilai = state.nilai[p.noPeserta] ? Object.keys(state.nilai[p.noPeserta]).length : 0;
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-900/60 transition">
+                        <td class="p-3 font-mono font-bold text-amber-500 tracking-wider">${p.noPeserta}</td>
+                        <td class="p-3 font-bold text-gray-200">${p.nama}</td>
+                        <td class="p-3 text-gray-400 text-[11px]">${p.kategori}</td>
+                        <td class="p-3 text-gray-400">${p.pangkalan}</td>
+                        <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${countNilai === 5 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-gray-800 text-gray-400'}">${countNilai} / 5 Lomba</span></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderLiveReport() {
+            const grid = document.getElementById('live-report-grid');
+            if(!grid) return;
+            grid.innerHTML = "";
+
+            const welcomeBanner = document.getElementById('peserta-welcome-banner');
+            const highlightNameSpan = document.getElementById('user-highlight-name');
+            if (state.user.role === 'peserta') {
+                welcomeBanner.classList.remove('hidden');
+                welcomeBanner.classList.add('flex');
+                highlightNameSpan.innerText = state.user.username;
+            } else {
+                welcomeBanner.classList.add('hidden');
+            }
+
+            LOMBA_LIST.forEach(lomba => {
+                let skorList = [];
+
+                state.peserta.filter(p => p.kategori === state.activeCategory).forEach(p => {
+                    const nilaiLomba = (state.nilai[p.noPeserta] && state.nilai[p.noPeserta][lomba] !== undefined) ? state.nilai[p.noPeserta][lomba] : null;
+                    if (nilaiLomba !== null) {
+                        skorList.push({ nama: p.nama, pangkalan: p.pangkalan, skor: nilaiLomba });
+                    }
+                });
+
+                skorList.sort((a, b) => b.skor - a.skor);
+
+                let top6 = [];
+                const PANGKAT_LABELS = ["Juara 1", "Juara 2", "Juara 3", "Harapan 1", "Harapan 2", "Harapan 3"];
+                for (let i = 0; i < 6; i++) {
+                    if (skorList[i]) {
+                        top6.push({ peringkat: PANGKAT_LABELS[i], nama: skorList[i].nama, pangkalan: skorList[i].pangkalan, skor: skorList[i].skor });
+                    }
+                }
+
+                let card = document.createElement('div');
+                card.className = "bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden shadow-xl";
+                
+                let cardHTML = `
+                    <div class="bg-gradient-to-r from-gray-900 via-slate-900 to-gray-900 border-b border-gray-800 px-5 py-4 flex justify-between items-center">
+                        <h3 class="text-sm font-black tracking-wider text-gray-200 uppercase flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-amber-500"></span> ${lomba}
+                        </h3>
+                        <span class="text-[10px] bg-gray-800 px-2 py-1 rounded text-gray-400 font-bold uppercase tracking-widest">${state.activeCategory}</span>
+                    </div>
+                    <div class="p-3">
+                `;
+
+                if (top6.length === 0) {
+                    cardHTML += `<div class="p-8 text-center text-xs text-gray-500 italic">Belum ada nilai terinput.</div>`;
+                } else {
+                    cardHTML += `
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="text-[10px] text-gray-500 border-b border-gray-800 uppercase tracking-widest font-bold">
+                                    <th class="pb-2 w-20 text-center">Juara</th>
+                                    <th class="pb-2 pl-2">Regu</th>
+                                    <th class="pb-2 text-right">Nilai</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-850">
+                    `;
+
+                    top6.forEach(j => {
+                        let badgeStyle = "bg-gray-800 text-gray-400 text-[10px]";
+                        if (j.peringkat === "Juara 1") badgeStyle = "bg-gradient-to-r from-amber-500 to-yellow-400 text-gray-950 font-black";
+                        if (j.peringkat === "Juara 2") badgeStyle = "bg-gray-300 text-gray-950 font-black";
+                        if (j.peringkat === "Juara 3") badgeStyle = "bg-amber-700 text-white font-bold";
+
+                        const isUserOwned = (state.user.role === 'peserta' && state.user.username.toLowerCase() === j.nama.toLowerCase());
+                        const rowHighlightClass = isUserOwned ? "bg-amber-500/10 border-l-2 border-l-amber-500" : "hover:bg-gray-850/40";
+
+                        cardHTML += `
+                            <tr class="transition-colors ${rowHighlightClass}">
+                                <td class="py-3 text-center">
+                                    <span class="px-2 py-0.5 rounded text-[9px] uppercase tracking-wider block font-semibold ${badgeStyle}">${j.peringkat}</span>
+                                </td>
+                                <td class="py-3 pl-2">
+                                    <div class="font-bold ${isUserOwned ? 'text-amber-400' : 'text-gray-200'}">${j.nama}</div>
+                                    <div class="text-[10px] text-gray-400">${j.pangkalan}</div>
+                                </td>
+                                <td class="py-3 text-right font-mono font-bold ${isUserOwned ? 'text-amber-400 text-sm' : 'text-orange-400'}">${j.skor.toFixed(1)}</td>
+                            </tr>
+                        `;
+                    });
+
+                    cardHTML += `</tbody></table>`;
+                }
+
+                cardHTML += `</div>`;
+                card.innerHTML = cardHTML;
+                grid.appendChild(card);
+            });
+        }
+
+        function loadSimulasiData() {
+            if (!confirm("Muat data contoh perlombaan ke Cloud Database?")) return;
+            const mockPeserta = [
+                { noPeserta: "PASD01", nama: "Garuda", pangkalan: "SDN Utama 01", kategori: "Putra SD" },
+                { noPeserta: "PASD02", nama: "Kancil", pangkalan: "SD Swasta Bintang", kategori: "Putra SD" },
+                { noPeserta: "PASD03", nama: "Harimau", pangkalan: "SDN Mekarwangi", kategori: "Putra SD" },
+                { noPeserta: "PASD04", nama: "Singa", pangkalan: "SD Plus Cendekia", kategori: "Putra SD" },
+                { noPeserta: "PASD05", nama: "Elang", pangkalan: "SDN 3 Ciamis", kategori: "Putra SD" },
+                { noPeserta: "PASD06", nama: "Hiu", pangkalan: "SD Kelapa Gading", kategori: "Putra SD" },
+                { noPeserta: "PISMP01", nama: "Dahlia", pangkalan: "SMPN 1 Bandung", kategori: "Putri SMP" },
+                { noPeserta: "PISMP02", nama: "Mawar", pangkalan: "SMP Terpadu As-Salam", kategori: "Putri SMP" }
+            ];
+
+            let mockNilai = {};
+            mockPeserta.forEach(p => {
+                mockNilai[p.noPeserta] = {};
+                LOMBA_LIST.forEach(lomba => {
+                    mockNilai[p.noPeserta][lomba] = parseFloat((80 + Math.random() * 20).toFixed(1));
+                });
+            });
+
+            db.ref('scopex_data').set({ peserta: mockPeserta, nilai: mockNilai })
+                .then(() => { showToast("Data simulasi sukses dikirim ke cloud!"); });
+        }
+
+        function clearDatabase() {
+            if (!confirm("Hapus seluruh database di cloud secara permanen?")) return;
+            db.ref('scopex_data').remove()
+                .then(() => { showToast("Database Cloud dibersihkan!", "bg-red-600"); });
+        }
+
+        function showToast(msg, bgClass = "bg-emerald-600") {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            if(!toast) return;
+            toast.className = `fixed bottom-5 right-5 text-white px-6 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-2 transition-all duration-300 ${bgClass}`;
+            toastMsg.innerText = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => { toast.classList.add('hidden'); }, 3500);
+        }
+    </script>
+</body>
+</html>
