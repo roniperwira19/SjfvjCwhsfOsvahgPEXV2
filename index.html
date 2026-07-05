@@ -333,7 +333,7 @@
         function initDefaultCloudPasswords() {
             let defaultPW = { admin: "admin123" };
             LOMBA_LIST.forEach(l => {
-                defaultPW[l.replace(/\./g, '_')] = "juri123";
+                defaultPW[l.replace(/\./g, '_').replace(/\s+/g, '_')] = "juri123";
             });
             db.ref('scopex_data/config/passwords').set(defaultPW);
         }
@@ -436,7 +436,7 @@
             const select = document.getElementById('pw-target-user');
             if(!select) return;
             LOMBA_LIST.forEach(l => {
-                select.innerHTML += `<option value="${l.replace(/\./g, '_')}">Juri Lomba: ${l}</option>`;
+                select.innerHTML += `<option value="${l.replace(/\./g, '_').replace(/\s+/g, '_')}">Juri Lomba: ${l}</option>`;
             });
         }
 
@@ -498,7 +498,7 @@
 
             const matchedLomba = LOMBA_LIST.find(l => l.toLowerCase() === user.toLowerCase());
             if (matchedLomba) {
-                const firebaseKey = matchedLomba.replace(/\./g, '_');
+                const firebaseKey = matchedLomba.replace(/\./g, '_').replace(/\s+/g, '_');
                 const targetSubPassword = state.passwords[firebaseKey] || 'juri123';
                 
                 if(pass === targetSubPassword) {
@@ -757,12 +757,34 @@
                     }
                 });
 
+                // 1. Urutkan dari skor tertinggi ke terendah
                 skorList.sort((a, b) => b.skor - a.skor);
-                let top6 = [];
+
+                // 2. Logika Penentuan Juara Kembar Berdasarkan Skor yang Sama
+                let top6WithTies = [];
                 const PANGKAT_LABELS = ["Juara 1", "Juara 2", "Juara 3", "Harapan 1", "Harapan 2", "Harapan 3"];
-                for (let i = 0; i < 6; i++) {
-                    if (skorList[i]) {
-                        top6.push({ peringkat: PANGKAT_LABELS[i], nama: skorList[i].nama, pangkalan: skorList[i].pangkalan, skor: skorList[i].skor });
+                
+                let currentRankIndex = 0; 
+
+                for (let i = 0; i < skorList.length; i++) {
+                    // Jika skor sama dengan regu sebelumnya, pertahankan indeks peringkatnya
+                    if (i > 0 && skorList[i].skor === skorList[i - 1].skor) {
+                        // currentRankIndex tidak ditambahkan (Juara Kembar)
+                    } else {
+                        // Jika skor berbeda, lompat ke indeks real saat ini (i)
+                        currentRankIndex = i;
+                    }
+
+                    // Tampilkan hanya jika posisi peringkat setara dengan Juara 1 s.d Harapan 3 (indeks 0-5)
+                    if (currentRankIndex < 6) {
+                        top6WithTies.push({
+                            peringkat: PANGKAT_LABELS[currentRankIndex],
+                            nama: skorList[i].nama,
+                            pangkalan: skorList[i].pangkalan,
+                            skor: skorList[i].skor
+                        });
+                    } else {
+                        break; // Stop loop jika peringkat real sudah di bawah Harapan 3
                     }
                 }
 
@@ -779,7 +801,7 @@
                     <div class="p-3">
                 `;
 
-                if (top6.length === 0) {
+                if (top6WithTies.length === 0) {
                     cardHTML += `<div class="p-8 text-center text-xs text-gray-500 italic">Belum ada nilai terinput.</div>`;
                 } else {
                     cardHTML += `
@@ -794,7 +816,7 @@
                             <tbody class="divide-y divide-gray-850">
                     `;
 
-                    top6.forEach(j => {
+                    top6WithTies.forEach(j => {
                         let badgeStyle = "bg-gray-800 text-gray-400 text-[10px]";
                         if (j.peringkat === "Juara 1") badgeStyle = "bg-gradient-to-r from-amber-500 to-yellow-400 text-gray-950 font-black";
                         if (j.peringkat === "Juara 2") badgeStyle = "bg-gray-300 text-gray-950 font-black";
@@ -871,4 +893,3 @@
     </script>
 </body>
 </html>
-
