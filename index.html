@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- FIREBASE SDK (Menggunakan versi kompatibilitas agar mudah diintegrasikan) -->
+    <!-- FIREBASE SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 </head>
@@ -15,17 +15,25 @@
 
     <!-- HEADER / NAVIGATION -->
     <header class="bg-gray-900 border-b border-gray-800 sticky top-0 z-50 shadow-xl">
-        <div class="container mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div class="text-center sm:text-left">
+        <div class="container mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="text-center md:text-left">
                 <h1 class="text-2xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-500 to-yellow-500">
                     ⚜️ SCOPEX VOL-II
                 </h1>
                 <p class="text-xs text-gray-400 mt-0.5 font-medium tracking-wide">Sistem Rekapitulasi Internal Cloud & Terproteksi</p>
             </div>
             
-            <div class="flex items-center gap-3" id="auth-nav-zone">
-                <!-- Diisi dinamis oleh JS berdasarkan status login -->
+            <!-- MENU NAVIGASI HALAMAN (Hanya muncul jika sudah login) -->
+            <div id="main-menu-zone" class="hidden flex flex-wrap justify-center gap-2">
+                <button id="nav-leaderboard" onclick="switchMainView('leaderboard')" class="px-4 py-2 rounded-xl text-xs font-bold uppercase border transition">
+                    <i class="fa-solid fa-ranking-star mr-1"></i> Papan Klasemen
+                </button>
+                <button id="nav-live" onclick="switchMainView('live')" class="px-4 py-2 rounded-xl text-xs font-bold uppercase border transition">
+                    <i class="fa-solid fa-trophy mr-1"></i> Live Mata Lomba
+                </button>
             </div>
+            
+            <div class="flex items-center gap-3" id="auth-nav-zone"></div>
         </div>
     </header>
 
@@ -44,13 +52,13 @@
                     <i class="fa-solid fa-lock"></i>
                 </div>
                 <h2 class="text-xl font-bold text-gray-100">Portal Kejuaraan Terkunci</h2>
-                <p class="text-xs text-gray-400 mt-1">Silakan masuk menggunakan Nama Regu dan Nomor Peserta Anda.</p>
+                <p class="text-xs text-gray-400 mt-1">Silakan masuk menggunakan Kredensial Anda (Admin/Juri/Peserta).</p>
             </div>
             
             <form id="form-login" class="space-y-4">
                 <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">Nama Regu / Username Admin</label>
-                    <input type="text" id="login-username" required class="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500 text-gray-100" placeholder="Masukkan nama regu atau admin...">
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">Username / Nama Regu / Nama Lomba</label>
+                    <input type="text" id="login-username" required class="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500 text-gray-100" placeholder="Masukkan ID atau username...">
                 </div>
                 <div>
                     <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">Password / Nomor Peserta</label>
@@ -62,7 +70,7 @@
                     </div>
                 </div>
                 <div id="login-error" class="hidden text-xs text-red-400 font-medium bg-red-950/50 border border-red-900/50 p-3 rounded-lg">
-                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> Nama Regu, Admin, atau Password salah.
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> Log masuk gagal. Silakan periksa kembali kredensial Anda.
                 </div>
                 <button type="submit" class="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-gray-950 font-black py-3 rounded-xl transition shadow-lg shadow-orange-950/20 text-sm tracking-wider uppercase">
                     LOGIN <i class="fa-solid fa-right-to-bracket ml-1"></i>
@@ -70,20 +78,50 @@
             </form>
         </section>
 
-        <!-- VIEW 2: LIVE REPORT -->
+        <!-- VIEW 2: MENU PAPAN KLASEMEN UTAMA AKUMULASI -->
+        <section id="view-leaderboard" class="hidden space-y-6 w-full animate-fade-in">
+            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-2xl">
+                <div class="border-b border-gray-800 pb-4 mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h3 class="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-500 uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-ranking-star"></i> Papan Klasemen Tertinggi Sementara
+                        </h3>
+                        <p class="text-xs text-gray-400">Akumulasi total nilai dari seluruh mata lomba berdasarkan jenjang pendidikan.</p>
+                    </div>
+                    <div class="flex gap-2 w-full sm:w-auto">
+                        <button id="btn-leaderboard-sd" onclick="switchLeaderboardView('SD')" class="flex-1 sm:flex-none px-4 py-2 text-xs font-bold uppercase rounded-lg border transition">Klasemen SD</button>
+                        <button id="btn-leaderboard-smp" onclick="switchLeaderboardView('SMP')" class="flex-1 sm:flex-none px-4 py-2 text-xs font-bold uppercase rounded-lg border transition">Klasemen SMP</button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="text-gray-400 border-b border-gray-800 uppercase tracking-wider font-semibold">
+                                <th class="p-3 w-16 text-center">Peringkat</th>
+                                <th class="p-3">Nama Regu</th>
+                                <th class="p-3">Kategori</th>
+                                <th class="p-3">Asal Sekolah</th>
+                                <th class="p-3 text-right">Total Nilai Akumulasi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-body" class="divide-y divide-gray-850 text-gray-300 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 3: LIVE REPORT (GRID MATA LOMBA) -->
         <section id="view-live" class="hidden space-y-6 w-full animate-fade-in">
             <!-- Filter Kategori -->
             <div class="bg-gray-900 border border-gray-800 p-4 rounded-2xl flex flex-col sm:flex-row gap-4 items-center justify-between">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-trophy text-amber-500"></i>
-                    <span class="text-xs font-bold uppercase tracking-wider text-gray-300">Live Kejuaraan Materi (Cloud terhubung)</span>
+                    <span class="text-xs font-bold uppercase tracking-wider text-gray-300">Live Pemeringkatan Per Lomba</span>
                 </div>
-                <div class="flex flex-wrap gap-1.5" id="category-filters">
-                    <!-- Tombol kategori di-render dinamis -->
-                </div>
+                <div class="flex flex-wrap gap-1.5" id="category-filters"></div>
             </div>
 
-            <!-- Banner info Peserta jika login -->
+            <!-- Banner info Peserta -->
             <div id="peserta-welcome-banner" class="hidden bg-indigo-950/40 border border-indigo-900/60 p-4 rounded-xl items-center justify-between gap-4">
                 <div class="flex items-center gap-3">
                     <div class="w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-sm">⚜️</div>
@@ -94,20 +132,21 @@
                 </div>
             </div>
 
-            <!-- Grid 5 Mata Lomba -->
-            <div id="live-report-grid" class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                <!-- Render Otomatis Papan Skor Juri -->
-            </div>
+            <!-- Grid Mata Lomba -->
+            <div id="live-report-grid" class="grid grid-cols-1 xl:grid-cols-2 gap-6"></div>
         </section>
 
-        <!-- VIEW 3: ADMIN PANEL -->
+        <!-- VIEW 4: ADMIN & SUB-ADMIN PANEL -->
         <section id="view-admin" class="hidden space-y-6 w-full">
             <div class="border-b border-gray-800 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h2 class="text-2xl font-black text-gray-100 flex items-center gap-2"><i class="fa-solid fa-sliders text-amber-500"></i> Panel Kontrol Juri & Admin</h2>
-                    <p class="text-xs text-gray-400">Kelola master database peserta, input poin nilai, dan reset sistem.</p>
+                    <h2 class="text-2xl font-black text-gray-100 flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-amber-500"></i> 
+                        <span id="admin-panel-title">Panel Kontrol</span>
+                    </h2>
+                    <p class="text-xs text-gray-400" id="admin-panel-desc">Kelola master database peserta dan input skor nilai cloud.</p>
                 </div>
-                <div class="flex gap-2 w-full sm:w-auto">
+                <div class="flex gap-2 w-full sm:w-auto id-admin-only">
                     <button onclick="loadSimulasiData()" class="flex-1 sm:flex-none bg-blue-600/20 border border-blue-500/30 hover:bg-blue-600/30 text-blue-400 text-xs font-bold px-4 py-2.5 rounded-xl transition">
                         <i class="fa-solid fa-database mr-1"></i> Isi Data Simulasi
                     </button>
@@ -118,8 +157,8 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Form Tambah Regu -->
-                <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl shadow-xl space-y-4 h-fit">
+                <!-- Form Tambah Regu (Hanya Super Admin) -->
+                <div id="wrapper-add-peserta" class="bg-gray-900 border border-gray-800 p-6 rounded-2xl shadow-xl space-y-4 h-fit id-admin-only">
                     <h3 class="text-base font-bold border-b border-gray-800 pb-2 text-amber-400"><i class="fa-solid fa-user-plus mr-1"></i> Registrasi Regu Baru</h3>
                     <form id="form-add-peserta" class="space-y-3.5">
                         <div>
@@ -149,8 +188,8 @@
                     </form>
                 </div>
 
-                <!-- Form Input Skor Nilai -->
-                <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl shadow-xl space-y-4 lg:col-span-2">
+                <!-- Form Input Skor Nilai (Admin & Sub-Admin) -->
+                <div id="wrapper-input-nilai" class="bg-gray-900 border border-gray-800 p-6 rounded-2xl shadow-xl space-y-4 lg:col-span-2">
                     <h3 class="text-base font-bold border-b border-gray-800 pb-2 text-orange-400"><i class="fa-solid fa-pen-to-square mr-1"></i> Formulir Input & Pembaruan Skor Juri</h3>
                     <form id="form-input-nilai" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
@@ -164,19 +203,11 @@
                         </div>
                         <div>
                             <label class="block text-[11px] font-bold uppercase text-gray-400 mb-1">2. Pilih Nama Regu</label>
-                            <select id="score-peserta" required class="w-full bg-gray-950 border border-gray-800 rounded-lg p-2.5 text-xs focus:outline-none focus:border-amber-500 text-white">
-                                <!-- Terisi dinamis -->
-                            </select>
+                            <select id="score-peserta" required class="w-full bg-gray-950 border border-gray-800 rounded-lg p-2.5 text-xs focus:outline-none focus:border-amber-500 text-white"></select>
                         </div>
                         <div>
                             <label class="block text-[11px] font-bold uppercase text-gray-400 mb-1">3. Pilih Mata Lomba</label>
-                            <select id="score-lomba" class="w-full bg-gray-950 border border-gray-800 rounded-lg p-2.5 text-xs focus:outline-none focus:border-amber-500 text-white">
-                                <option value="Peta Lapangan">Peta Lapangan</option>
-                                <option value="Bank Soal">Bank Soal</option>
-                                <option value="Semaphore">Semaphore</option>
-                                <option value="Morse">Morse</option>
-                                <option value="Sandi">Sandi</option>
-                            </select>
+                            <select id="score-lomba" class="w-full bg-gray-950 border border-gray-800 rounded-lg p-2.5 text-xs focus:outline-none focus:border-amber-500 text-white disabled:opacity-60 disabled:cursor-not-allowed"></select>
                         </div>
                         <div>
                             <label class="block text-[11px] font-bold uppercase text-gray-400 mb-1">4. Skor Nilai Akhir (0 - 100)</label>
@@ -191,24 +222,49 @@
                 </div>
             </div>
 
-            <!-- Daftar Master Tabel Peserta -->
-            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl">
-                <h3 class="text-base font-bold mb-4 text-gray-300"><i class="fa-solid fa-list-check mr-1"></i> Manajer Seluruh Data Kontestan</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs border-collapse">
-                        <thead>
-                            <tr class="text-gray-400 border-b border-gray-800 uppercase tracking-wider font-semibold">
-                                <th class="p-3">No Peserta (Password)</th>
-                                <th class="p-3">Nama Regu</th>
-                                <th class="p-3">Kategori</th>
-                                <th class="p-3">Asal Sekolah</th>
-                                <th class="p-3">Nilai Masuk</th>
-                            </tr>
-                        </thead>
-                        <tbody id="admin-table-peserta" class="divide-y divide-gray-850 text-gray-300">
-                            <!-- Diisi dinamis -->
-                        </tbody>
-                    </table>
+            <!-- MENU PENGATURAN GANTI PASSWORD ADMIN (HANYA SUPER ADMIN) -->
+            <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl id-admin-only">
+                <h3 class="text-base font-bold mb-3 text-red-400 flex items-center gap-2"><i class="fa-solid fa-key"></i> Pengaturan Keamanan & Sandi Akses Otoritas</h3>
+                <p class="text-xs text-gray-400 mb-4">Ganti kredensial password login milik Super Admin maupun Juri sub-admin di bawah ini secara realtime cloud.</p>
+                
+                <form id="form-change-password" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-gray-400 mb-1">Pilih Akun Otoritas</label>
+                        <select id="pw-target-user" class="w-full bg-gray-950 border border-gray-800 rounded-lg p-2.5 text-xs focus:outline-none focus:border-amber-500 text-white">
+                            <option value="admin">Super Admin (Username: admin)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase text-gray-400 mb-1">Masukkan Password Baru</label>
+                        <input type="text" id="pw-new-value" required class="w-full bg-gray-950 border border-gray-800 rounded-lg p-2.5 text-xs focus:outline-none focus:border-amber-500 text-white font-mono" placeholder="Ketik sandi baru...">
+                    </div>
+                    <button type="submit" class="w-full bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 font-bold py-2.5 rounded-lg text-xs transition uppercase tracking-wider">
+                        Perbarui Sandi Cloud
+                    </button>
+                </form>
+            </div>
+
+            <!-- Manajer Data Terpisah (4 Kategori) -->
+            <div class="space-y-6 id-admin-only">
+                <h3 class="text-base font-black text-gray-300 flex items-center gap-2"><i class="fa-solid fa-list-check"></i> Manajer Seluruh Data Kontestan (Terpisah Kategori)</h3>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 shadow-xl">
+                        <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider mb-2 border-b border-gray-800 pb-1">Kategori: Putra SD</h4>
+                        <div class="overflow-x-auto"><table class="w-full text-left text-[11px]"><tbody id="table-manajer-pasd" class="divide-y divide-gray-850"></tbody></table></div>
+                    </div>
+                    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 shadow-xl">
+                        <h4 class="text-xs font-bold text-pink-400 uppercase tracking-wider mb-2 border-b border-gray-800 pb-1">Kategori: Putri SD</h4>
+                        <div class="overflow-x-auto"><table class="w-full text-left text-[11px]"><tbody id="table-manajer-pisd" class="divide-y divide-gray-850"></tbody></table></div>
+                    </div>
+                    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 shadow-xl">
+                        <h4 class="text-xs font-bold text-blue-400 uppercase tracking-wider mb-2 border-b border-gray-800 pb-1">Kategori: Putra SMP</h4>
+                        <div class="overflow-x-auto"><table class="w-full text-left text-[11px]"><tbody id="table-manajer-pasmp" class="divide-y divide-gray-850"></tbody></table></div>
+                    </div>
+                    <div class="bg-gray-900 border border-gray-800 rounded-2xl p-4 shadow-xl">
+                        <h4 class="text-xs font-bold text-purple-400 uppercase tracking-wider mb-2 border-b border-gray-800 pb-1">Kategori: Putri SMP</h4>
+                        <div class="overflow-x-auto"><table class="w-full text-left text-[11px]"><tbody id="table-manajer-pismp" class="divide-y divide-gray-850"></tbody></table></div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -220,9 +276,8 @@
         &copy; 2026 SCOPEX VOL-II. Sistem Rekapitulasi Realtime Cloud by RTD.
     </footer>
 
-    <!-- LOGIK SISTEM (JAVASCRIPT BACKEND INTEGRATION) -->
+    <!-- LOGIK SISTEM -->
     <script>
-        // === PASTE CONFIGURATION FIREBASE KAMU DI SINI ===
         const firebaseConfig = {
             apiKey: "AIzaSyDBeDctmH9RjChNBTvp0hsbIVwizTPxeDg",
             authDomain: "scopex2026-d929a.firebaseapp.com",
@@ -233,40 +288,55 @@
             appId: "1:271534162581:web:8b2f748c1974f0dbb2519c",
             measurementId: "G-1GGNVGWBF9"
         };
-        // ================================================
 
-        // Inisialisasi Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
         const KATEGORI_LIST = ["Putra SD", "Putri SD", "Putra SMP", "Putri SMP"];
-        const LOMBA_LIST = ["Peta Lapangan", "Bank Soal", "Semaphore", "Morse", "Sandi"];
+        const LOMBA_LIST = ["Peta Lapangan", "Bank Soal", "Semaphore", "Morse", "Sandi", "B. INGGRIS SIMPUL"];
 
         let state = {
-            user: JSON.parse(sessionStorage.getItem('scopex_user')) || { role: 'guest', username: null },
+            user: JSON.parse(sessionStorage.getItem('scopex_user')) || { role: 'guest', username: null, targetLomba: null },
+            activeMainView: "leaderboard", // Halaman menu aktif bawaan (leaderboard / live / admin)
             activeCategory: "Putra SD",
+            activeLeaderboardView: "SD",
             peserta: [],
-            nilai: {}
+            nilai: {},
+            passwords: {}
         };
 
-        // Sinkronisasi data real-time langsung dari Cloud Database Firebase
         db.ref('scopex_data').on('value', (snapshot) => {
             const cloudData = snapshot.val() || {};
             state.peserta = cloudData.peserta || [];
             state.nilai = cloudData.nilai || {};
+            state.passwords = cloudData.config?.passwords || {};
             
-            // Re-render UI setiap kali ada perubahan data di cloud database
+            if (!state.passwords.admin) {
+                initDefaultCloudPasswords();
+            }
+
             updateAdminPesertaDropdown();
-            renderAdminTable();
+            renderSeparateAdminTables();
             renderLiveReport();
+            renderLeaderboard();
             generateAutomatedNoPeserta();
         });
 
         document.addEventListener("DOMContentLoaded", () => {
             initCategoryFilters();
+            initLombaDropdownOptions();
+            initPasswordTargetOptions();
             renderAuthUI();
             checkGateRoute();
         });
+
+        function initDefaultCloudPasswords() {
+            let defaultPW = { admin: "admin123" };
+            LOMBA_LIST.forEach(l => {
+                defaultPW[l.replace(/\./g, '_')] = "juri123";
+            });
+            db.ref('scopex_data/config/passwords').set(defaultPW);
+        }
 
         function togglePasswordVisibility(inputId, iconId) {
             const input = document.getElementById(inputId);
@@ -280,23 +350,94 @@
             }
         }
 
-        function checkGateRoute() {
-            document.getElementById('view-login').classList.add('hidden');
+        // FUNGSI GANTI HALAMAN UTAMA (SWITCH MENU)
+        function switchMainView(targetView) {
+            state.activeMainView = targetView;
+            
+            // Sembunyikan semua views konten utama
+            document.getElementById('view-leaderboard').classList.add('hidden');
             document.getElementById('view-live').classList.add('hidden');
             document.getElementById('view-admin').classList.add('hidden');
 
+            const btnLeaderboard = document.getElementById('nav-leaderboard');
+            const btnLive = document.getElementById('nav-live');
+
+            // Reset style tombol menu
+            btnLeaderboard.className = "px-4 py-2 rounded-xl text-xs font-bold uppercase border bg-gray-900 border-gray-800 text-gray-400 hover:text-white";
+            btnLive.className = "px-4 py-2 rounded-xl text-xs font-bold uppercase border bg-gray-900 border-gray-800 text-gray-400 hover:text-white";
+
+            if (targetView === 'leaderboard') {
+                document.getElementById('view-leaderboard').classList.remove('hidden');
+                btnLeaderboard.className = "px-4 py-2 rounded-xl text-xs font-bold uppercase border bg-gradient-to-r from-amber-500 to-orange-500 text-gray-950 border-transparent shadow-lg";
+            } else if (targetView === 'live') {
+                document.getElementById('view-live').classList.remove('hidden');
+                btnLive.className = "px-4 py-2 rounded-xl text-xs font-bold uppercase border bg-gradient-to-r from-amber-500 to-orange-500 text-gray-950 border-transparent shadow-lg";
+            } else if (targetView === 'admin') {
+                document.getElementById('view-admin').classList.remove('hidden');
+            }
+        }
+
+        function checkGateRoute() {
+            const menuZone = document.getElementById('main-menu-zone');
+            document.getElementById('view-login').classList.add('hidden');
+            menuZone.classList.add('hidden');
+
             if (state.user.role === 'guest') {
                 document.getElementById('view-login').classList.remove('hidden');
+                document.getElementById('view-leaderboard').classList.add('hidden');
+                document.getElementById('view-live').classList.add('hidden');
+                document.getElementById('view-admin').classList.add('hidden');
                 return;
             }
-            if (state.user.role === 'admin') {
-                document.getElementById('view-admin').classList.remove('hidden');
+
+            // Tampilkan navigasi menu atas untuk user terdaftar
+            menuZone.classList.remove('hidden');
+
+            if (state.user.role === 'admin' || state.user.role === 'sub-admin') {
+                const adminOnlyElements = document.querySelectorAll('.id-admin-only');
+                if(state.user.role === 'sub-admin') {
+                    adminOnlyElements.forEach(el => el.classList.add('hidden'));
+                    document.getElementById('wrapper-input-nilai').className = "bg-gray-900 border border-gray-800 p-6 rounded-2xl shadow-xl space-y-4 lg:col-span-3";
+                    document.getElementById('admin-panel-title').innerText = `Panel Juri: ${state.user.targetLomba}`;
+                    document.getElementById('admin-panel-desc').innerText = `Anda masuk sebagai sub-admin pengelola nilai mata lomba ${state.user.targetLomba}.`;
+                    
+                    const scoreLombaSelect = document.getElementById('score-lomba');
+                    scoreLombaSelect.value = state.user.targetLomba;
+                    scoreLombaSelect.disabled = true;
+                } else {
+                    adminOnlyElements.forEach(el => el.classList.remove('hidden'));
+                    document.getElementById('wrapper-input-nilai').className = "bg-gray-900 border border-gray-800 p-6 rounded-2xl shadow-xl space-y-4 lg:col-span-2";
+                    document.getElementById('admin-panel-title').innerText = "Panel Kontrol Juri & Admin";
+                    document.getElementById('admin-panel-desc').innerText = "Kelola master database peserta, input poin nilai, dan reset sistem.";
+                    document.getElementById('score-lomba').disabled = false;
+                }
+                
+                // Masuk ke view admin jika role-nya admin/juri
+                switchMainView(state.activeMainView === 'login' ? 'admin' : state.activeMainView);
                 return;
             }
+
             if (state.user.role === 'peserta') {
-                document.getElementById('view-live').classList.remove('hidden');
+                switchMainView(state.activeMainView === 'admin' || state.activeMainView === 'login' ? 'leaderboard' : state.activeMainView);
                 return;
             }
+        }
+
+        function initLombaDropdownOptions() {
+            const select = document.getElementById('score-lomba');
+            if(!select) return;
+            select.innerHTML = "";
+            LOMBA_LIST.forEach(l => {
+                select.innerHTML += `<option value="${l}">${l}</option>`;
+            });
+        }
+
+        function initPasswordTargetOptions() {
+            const select = document.getElementById('pw-target-user');
+            if(!select) return;
+            LOMBA_LIST.forEach(l => {
+                select.innerHTML += `<option value="${l.replace(/\./g, '_')}">Juri Lomba: ${l}</option>`;
+            });
         }
 
         function generateAutomatedNoPeserta() {
@@ -311,26 +452,22 @@
                 case "Putra SMP": prefix = "PASMP"; break;
                 case "Putri SMP": prefix = "PISMP"; break;
             }
-
             const countExisting = state.peserta.filter(p => p.kategori === kategori).length;
-            const nextSequence = countExisting + 1;
-            const sequenceString = String(nextSequence).padStart(2, '0');
-            inputNoPeserta.value = prefix + sequenceString;
+            inputNoPeserta.value = prefix + String(countExisting + 1).padStart(2, '0');
         }
 
         function renderAuthUI() {
             const nav = document.getElementById('auth-nav-zone');
             if (state.user.role === 'guest') {
-                nav.innerHTML = `
-                    <span class="text-xs font-semibold text-red-400 bg-red-950/40 px-3 py-1.5 rounded-xl border border-red-900/40">
-                        <i class="fa-solid fa-lock-open mr-1"></i> Sesi Terkunci
-                    </span>
-                `;
+                nav.innerHTML = `<span class="text-xs font-semibold text-red-400 bg-red-950/40 px-3 py-1.5 rounded-xl border border-red-900/40"><i class="fa-solid fa-lock-open mr-1"></i> Sesi Terkunci</span>`;
             } else {
-                let badgeColor = state.user.role === 'admin' ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20';
+                let badgeColor = 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20';
+                if (state.user.role === 'admin') badgeColor = 'bg-red-500/10 text-red-400 border border-red-500/20';
+                if (state.user.role === 'sub-admin') badgeColor = 'bg-orange-500/10 text-orange-400 border border-orange-500/20';
+
+                const isPowerRole = (state.user.role === 'admin' || state.user.role === 'sub-admin');
                 nav.innerHTML = `
-                    ${state.user.role === 'admin' ? `<button onclick="toggleAdminView('admin')" class="text-xs font-bold text-amber-500 hover:underline px-2"><i class="fa-solid fa-screwdriver-wrench mr-1"></i>Panel Admin</button>` : ''}
-                    ${state.user.role === 'admin' ? `<button onclick="toggleAdminView('live')" class="text-xs font-bold text-gray-400 hover:text-white px-2"><i class="fa-solid fa-eye mr-1"></i>Intip Live Report</button>` : ''}
+                    ${isPowerRole ? `<button onclick="switchMainView('admin')" class="text-xs font-bold text-amber-500 hover:underline px-2"><i class="fa-solid fa-screwdriver-wrench mr-1"></i>Panel Juri</button>` : ''}
                     <div class="flex items-center gap-2">
                         <span class="text-xs font-semibold px-2.5 py-1.5 rounded-lg uppercase tracking-wider ${badgeColor}">
                             <i class="fa-solid fa-user text-[10px] mr-1"></i> ${state.user.username}
@@ -343,16 +480,6 @@
             }
         }
 
-        function toggleAdminView(target) {
-            document.getElementById('view-live').classList.add('hidden');
-            document.getElementById('view-admin').classList.add('hidden');
-            if (target === 'live') {
-                document.getElementById('view-live').classList.remove('hidden');
-            } else {
-                document.getElementById('view-admin').classList.remove('hidden');
-            }
-        }
-
         document.getElementById('form-login').onsubmit = function(e) {
             e.preventDefault();
             const user = document.getElementById('login-username').value.trim();
@@ -360,24 +487,60 @@
             const err = document.getElementById('login-error');
             err.classList.add('hidden');
 
-            if (user.toLowerCase() === 'admin' && pass === 'admin123') {
-                state.user = { role: 'admin', username: 'Super Admin' };
+            const masterAdminPassword = state.passwords.admin || 'admin123';
+
+            if (user.toLowerCase() === 'admin' && pass === masterAdminPassword) {
+                state.user = { role: 'admin', username: 'Super Admin', targetLomba: null };
+                state.activeMainView = 'admin';
                 completeLogin();
                 return;
+            }
+
+            const matchedLomba = LOMBA_LIST.find(l => l.toLowerCase() === user.toLowerCase());
+            if (matchedLomba) {
+                const firebaseKey = matchedLomba.replace(/\./g, '_');
+                const targetSubPassword = state.passwords[firebaseKey] || 'juri123';
+                
+                if(pass === targetSubPassword) {
+                    state.user = { role: 'sub-admin', username: `Juri ${matchedLomba}`, targetLomba: matchedLomba };
+                    state.activeMainView = 'admin';
+                    completeLogin();
+                    return;
+                }
             }
 
             const matchPeserta = state.peserta.find(p => 
                 p.nama.toLowerCase() === user.toLowerCase() && 
                 p.noPeserta.toLowerCase() === pass.toLowerCase()
             );
-
             if (matchPeserta) {
-                state.user = { role: 'peserta', username: matchPeserta.nama };
+                state.user = { role: 'peserta', username: matchPeserta.nama, targetLomba: null };
+                state.activeMainView = 'leaderboard';
                 completeLogin();
                 return;
             }
 
             err.classList.remove('hidden');
+        };
+
+        document.getElementById('form-change-password').onsubmit = function(e) {
+            e.preventDefault();
+            const targetUserKey = document.getElementById('pw-target-user').value;
+            const newPasswordVal = document.getElementById('pw-new-value').value.trim();
+
+            if(newPasswordVal.length < 4) {
+                alert("Kata sandi terlalu pendek! Minimal berkisar 4 karakter.");
+                return;
+            }
+
+            db.ref(`scopex_data/config/passwords/${targetUserKey}`).set(newPasswordVal)
+                .then(() => {
+                    document.getElementById('pw-new-value').value = "";
+                    showToast("Sandi Otoritas Berhasil Diperbarui di Cloud!");
+                })
+                .catch((error) => {
+                    alert("Gagal mengupdate password: " + error.message);
+                });
         };
 
         function completeLogin() {
@@ -388,7 +551,8 @@
         }
 
         function handleLogout() {
-            state.user = { role: 'guest', username: null };
+            state.user = { role: 'guest', username: null, targetLomba: null };
+            state.activeMainView = 'leaderboard';
             sessionStorage.removeItem('scopex_user');
             renderAuthUI();
             showToast("Sistem dikunci kembali.", "bg-gray-800");
@@ -422,7 +586,97 @@
             });
         }
 
-        // AKSI KIRIM DATA KE CLOUD FIREBASE
+        function switchLeaderboardView(tier) {
+            state.activeLeaderboardView = tier;
+            renderLeaderboard();
+        }
+
+        function renderLeaderboard() {
+            const body = document.getElementById('leaderboard-body');
+            const btnSD = document.getElementById('btn-leaderboard-sd');
+            const btnSMP = document.getElementById('btn-leaderboard-smp');
+            if(!body) return;
+
+            if (state.activeLeaderboardView === 'SD') {
+                btnSD.className = "px-4 py-2 text-xs font-bold uppercase rounded-lg bg-amber-500 text-gray-950 border-amber-500 shadow-md";
+                btnSMP.className = "px-4 py-2 text-xs font-bold uppercase rounded-lg bg-gray-800 text-gray-400 border-gray-700 hover:text-white";
+            } else {
+                btnSMP.className = "px-4 py-2 text-xs font-bold uppercase rounded-lg bg-amber-500 text-gray-950 border-amber-500 shadow-md";
+                btnSD.className = "px-4 py-2 text-xs font-bold uppercase rounded-lg bg-gray-800 text-gray-400 border-gray-700 hover:text-white";
+            }
+
+            let rekapList = [];
+            state.peserta.forEach(p => {
+                const isSD = p.kategori.includes("SD");
+                if ((state.activeLeaderboardView === 'SD' && isSD) || (state.activeLeaderboardView === 'SMP' && !isSD)) {
+                    let totalPoin = 0;
+                    LOMBA_LIST.forEach(lomba => {
+                        if (state.nilai[p.noPeserta] && state.nilai[p.noPeserta][lomba] !== undefined) {
+                            totalPoin += state.nilai[p.noPeserta][lomba];
+                        }
+                    });
+                    rekapList.push({ ...p, total: totalPoin });
+                }
+            });
+
+            rekapList.sort((a, b) => b.total - a.total);
+            body.innerHTML = "";
+
+            if(rekapList.length === 0) {
+                body.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500 italic">Belum ada data untuk jenjang ini.</td></tr>`;
+                return;
+            }
+
+            rekapList.forEach((r, index) => {
+                let badgeStyle = "bg-gray-800 text-gray-400";
+                if (index === 0) badgeStyle = "bg-yellow-400 text-gray-950 font-bold";
+                if (index === 1) badgeStyle = "bg-gray-300 text-gray-950 font-bold";
+                if (index === 2) badgeStyle = "bg-amber-700 text-white font-bold";
+
+                body.innerHTML += `
+                    <tr class="hover:bg-gray-900/40 transition">
+                        <td class="p-3 text-center"><span class="px-2 py-0.5 rounded text-[10px] ${badgeStyle}">${index + 1}</span></td>
+                        <td class="p-3 font-bold text-gray-100">${r.nama}</td>
+                        <td class="p-3 text-gray-400 text-[11px]">${r.kategori}</td>
+                        <td class="p-3 text-gray-400">${r.pangkalan}</td>
+                        <td class="p-3 text-right font-mono text-amber-400 font-bold text-sm">${r.total.toFixed(1)} Pts</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderSeparateAdminTables() {
+            const ids = {
+                "Putra SD": "table-manajer-pasd",
+                "Putri SD": "table-manajer-pisd",
+                "Putra SMP": "table-manajer-pasmp",
+                "Putri SMP": "table-manajer-pismp"
+            };
+
+            KATEGORI_LIST.forEach(kat => {
+                const tbody = document.getElementById(ids[kat]);
+                if(!tbody) return;
+                tbody.innerHTML = "";
+
+                const filtered = state.peserta.filter(p => p.kategori === kat);
+                if (filtered.length === 0) {
+                    tbody.innerHTML = `<tr><td class="p-3 text-center text-gray-500 italic">Tidak ada regu terdaftar.</td></tr>`;
+                    return;
+                }
+
+                filtered.forEach(p => {
+                    const countNilai = state.nilai[p.noPeserta] ? Object.keys(state.nilai[p.noPeserta]).length : 0;
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-gray-950/40">
+                            <td class="p-2 font-mono font-bold text-amber-500">${p.noPeserta}</td>
+                            <td class="p-2 font-bold text-gray-200">${p.nama} <span class="text-[10px] font-normal text-gray-400">(${p.pangkalan})</span></td>
+                            <td class="p-2 text-right"><span class="px-1.5 py-0.5 rounded text-[9px] ${countNilai === LOMBA_LIST.length ? 'bg-emerald-500/10 text-emerald-400' : 'bg-gray-800 text-gray-400'}">${countNilai}/${LOMBA_LIST.length} Lomba</span></td>
+                        </tr>
+                    `;
+                });
+            });
+        }
+
         document.getElementById('form-add-peserta').onsubmit = function(e) {
             e.preventDefault();
             const noPeserta = document.getElementById('p-nopeserta').value.trim().toUpperCase();
@@ -436,14 +690,11 @@
             }
 
             state.peserta.push({ noPeserta, nama, pangkalan, kategori });
-            
-            // Simpan ke Firebase
-            db.ref('scopex_data/peserta').set(state.peserta)
-                .then(() => {
-                    document.getElementById('p-nama').value = "";
-                    document.getElementById('p-pangkalan').value = "";
-                    showToast(`Regu ${nama} berhasil disimpan ke Cloud!`);
-                });
+            db.ref('scopex_data/peserta').set(state.peserta).then(() => {
+                document.getElementById('p-nama').value = "";
+                document.getElementById('p-pangkalan').value = "";
+                showToast(`Regu ${nama} berhasil disimpan ke Cloud!`);
+            });
         };
 
         document.getElementById('form-input-nilai').onsubmit = function(e) {
@@ -460,12 +711,10 @@
             if (!state.nilai[pesertaId]) state.nilai[pesertaId] = {};
             state.nilai[pesertaId][lomba] = skor;
 
-            // Simpan ke Firebase
-            db.ref('scopex_data/nilai/' + pesertaId).set(state.nilai[pesertaId])
-                .then(() => {
-                    document.getElementById('score-nilai').value = "";
-                    showToast("Nilai sukses diperbarui di seluruh layar live!");
-                });
+            db.ref('scopex_data/nilai/' + pesertaId).set(state.nilai[pesertaId]).then(() => {
+                document.getElementById('score-nilai').value = "";
+                showToast("Nilai sukses diperbarui di seluruh layar live!");
+            });
         };
 
         function updateAdminPesertaDropdown() {
@@ -479,33 +728,8 @@
                 dropdown.innerHTML = `<option value="">-- Tidak ada regu terdaftar --</option>`;
                 return;
             }
-
             filtered.forEach(p => {
                 dropdown.innerHTML += `<option value="${p.noPeserta}">${p.nama} (${p.pangkalan})</option>`;
-            });
-        }
-
-        function renderAdminTable() {
-            const tbody = document.getElementById('admin-table-peserta');
-            if(!tbody) return;
-            tbody.innerHTML = "";
-
-            if (state.peserta.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500 italic">Database cloud kosong.</td></tr>`;
-                return;
-            }
-
-            state.peserta.forEach(p => {
-                const countNilai = state.nilai[p.noPeserta] ? Object.keys(state.nilai[p.noPeserta]).length : 0;
-                tbody.innerHTML += `
-                    <tr class="hover:bg-gray-900/60 transition">
-                        <td class="p-3 font-mono font-bold text-amber-500 tracking-wider">${p.noPeserta}</td>
-                        <td class="p-3 font-bold text-gray-200">${p.nama}</td>
-                        <td class="p-3 text-gray-400 text-[11px]">${p.kategori}</td>
-                        <td class="p-3 text-gray-400">${p.pangkalan}</td>
-                        <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${countNilai === 5 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-gray-800 text-gray-400'}">${countNilai} / 5 Lomba</span></td>
-                    </tr>
-                `;
             });
         }
 
@@ -526,7 +750,6 @@
 
             LOMBA_LIST.forEach(lomba => {
                 let skorList = [];
-
                 state.peserta.filter(p => p.kategori === state.activeCategory).forEach(p => {
                     const nilaiLomba = (state.nilai[p.noPeserta] && state.nilai[p.noPeserta][lomba] !== undefined) ? state.nilai[p.noPeserta][lomba] : null;
                     if (nilaiLomba !== null) {
@@ -535,7 +758,6 @@
                 });
 
                 skorList.sort((a, b) => b.skor - a.skor);
-
                 let top6 = [];
                 const PANGKAT_LABELS = ["Juara 1", "Juara 2", "Juara 3", "Harapan 1", "Harapan 2", "Harapan 3"];
                 for (let i = 0; i < 6; i++) {
@@ -594,10 +816,8 @@
                             </tr>
                         `;
                     });
-
                     cardHTML += `</tbody></table>`;
                 }
-
                 cardHTML += `</div>`;
                 card.innerHTML = cardHTML;
                 grid.appendChild(card);
@@ -611,8 +831,8 @@
                 { noPeserta: "PASD02", nama: "Kancil", pangkalan: "SD Swasta Bintang", kategori: "Putra SD" },
                 { noPeserta: "PASD03", nama: "Harimau", pangkalan: "SDN Mekarwangi", kategori: "Putra SD" },
                 { noPeserta: "PASD04", nama: "Singa", pangkalan: "SD Plus Cendekia", kategori: "Putra SD" },
-                { noPeserta: "PASD05", nama: "Elang", pangkalan: "SDN 3 Ciamis", kategori: "Putra SD" },
-                { noPeserta: "PASD06", nama: "Hiu", pangkalan: "SD Kelapa Gading", kategori: "Putra SD" },
+                { noPeserta: "PISD01", nama: "Melati", pangkalan: "SDN Suka Maju", kategori: "Putri SD" },
+                { noPeserta: "PASMP01", nama: "Elang", pangkalan: "SMPN 3 Ciamis", kategori: "Putra SMP" },
                 { noPeserta: "PISMP01", nama: "Dahlia", pangkalan: "SMPN 1 Bandung", kategori: "Putri SMP" },
                 { noPeserta: "PISMP02", nama: "Mawar", pangkalan: "SMP Terpadu As-Salam", kategori: "Putri SMP" }
             ];
@@ -621,18 +841,22 @@
             mockPeserta.forEach(p => {
                 mockNilai[p.noPeserta] = {};
                 LOMBA_LIST.forEach(lomba => {
-                    mockNilai[p.noPeserta][lomba] = parseFloat((80 + Math.random() * 20).toFixed(1));
+                    mockNilai[p.noPeserta][lomba] = parseFloat((70 + Math.random() * 30).toFixed(1));
                 });
             });
 
-            db.ref('scopex_data').set({ peserta: mockPeserta, nilai: mockNilai })
-                .then(() => { showToast("Data simulasi sukses dikirim ke cloud!"); });
+            db.ref('scopex_data/peserta').set(mockPeserta);
+            db.ref('scopex_data/nilai').set(mockNilai).then(() => {
+                showToast("Data simulasi sukses dikirim ke cloud!");
+            });
         }
 
         function clearDatabase() {
             if (!confirm("Hapus seluruh database di cloud secara permanen?")) return;
-            db.ref('scopex_data').remove()
-                .then(() => { showToast("Database Cloud dibersihkan!", "bg-red-600"); });
+            db.ref('scopex_data/peserta').remove();
+            db.ref('scopex_data/nilai').remove().then(() => { 
+                showToast("Database Rekapitulasi dibersihkan!", "bg-red-600"); 
+            });
         }
 
         function showToast(msg, bgClass = "bg-emerald-600") {
@@ -647,3 +871,4 @@
     </script>
 </body>
 </html>
+
