@@ -1,0 +1,1844 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCOPEX VOL-II - SCOPEX VOLUME II</title>
+    
+    <!-- Favicon Update -->
+    <link rel="icon" href="https://lh3.googleusercontent.com/d/17iFI9vo1npQGBOPUgDutxl3hOhXrXYYr" type="image/x-icon">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif'],
+                    },
+                    colors: {
+                        obsidian: { 950: '#030303', 900: '#09090b', 800: '#141417', 700: '#1f1f23', 600: '#2d2d34' },
+                        tech: {
+                            red: '#e11d48', redGlow: 'rgba(225, 29, 72, 0.15)',
+                            yellow: '#f59e0b', yellowGlow: 'rgba(245, 158, 11, 0.15)',
+                            blue: '#3b82f6', blueGlow: 'rgba(59, 130, 246, 0.15)'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #030303; color: #f4f4f5; }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #09090b; }
+        ::-webkit-scrollbar-thumb { background: #1f1f23; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #e11d48; }
+        .active-sub-item { color: #f59e0b !important; border-left: 2px solid #f59e0b !important; background: rgba(245, 158, 11, 0.04) !important; font-weight: bold !important; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col md:flex-row overflow-x-hidden relative">
+
+    <div class="fixed inset-0 z-[-2] bg-obsidian-950 pointer-events-none opacity-20" 
+         style="background-image: linear-gradient(rgba(255,255,255,0.01) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.01) 1px, transparent 1px); background-size: 40px 40px;">
+    </div>
+
+    <div id="custom-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/85 backdrop-blur-md" onclick="closeModal()"></div>
+        <div class="bg-obsidian-900 border border-obsidian-800 relative rounded-2xl p-6 w-full max-w-md transform transition-all shadow-2xl">
+            <div class="flex items-center gap-3 mb-4">
+                <div id="modal-icon" class="w-8 h-8 rounded-xl flex items-center justify-center text-md shrink-0"></div>
+                <h3 id="modal-title" class="text-xs font-display font-bold text-white uppercase tracking-wider"></h3>
+            </div>
+            <p id="modal-message" class="text-gray-400 text-xs mb-6 leading-relaxed"></p>
+            <div id="modal-actions" class="flex justify-end gap-3 text-xs"></div>
+        </div>
+    </div>
+
+    <header id="mobile-header" class="hidden bg-obsidian-900 px-5 py-3 justify-between items-center w-full sticky top-0 z-50 border-b border-obsidian-800 shadow-lg">
+        <div class="flex items-center gap-2">
+            <img src="https://lh3.googleusercontent.com/d/17iFI9vo1npQGBOPUgDutxl3hOhXrXYYr" alt="Logo SCOPEX" class="w-8 h-8 object-contain" onerror="this.src='https://placehold.co/100x100/09090b/e11d48?text=S2'">
+            <span class="text-xs font-display font-bold tracking-widest text-white uppercase">SCOPEX VOL-II</span>
+        </div>
+        <button onclick="toggleSidebar()" class="text-gray-400 hover:text-tech-yellow transition-colors p-2 focus:outline-none">
+            <i class="fa-solid fa-bars-staggered text-lg"></i>
+        </button>
+    </header>
+
+    <!-- Sidebar: Diperbarui dengan h-[100dvh] untuk menangani masalah address bar pada mobile -->
+    <aside id="sidebar" class="hidden fixed inset-y-0 left-0 z-40 w-72 bg-obsidian-900 border-r border-obsidian-800/80 flex-col transform -translate-x-full transition-transform duration-300 ease-in-out md:sticky md:top-0 h-[100dvh] md:h-screen">
+        <div class="p-6 border-b border-obsidian-800 flex items-center gap-3 bg-obsidian-950/40 shrink-0">
+            <div class="w-10 h-10 rounded-xl bg-obsidian-950/80 border border-obsidian-800 flex items-center justify-center shadow-md shrink-0 p-1">
+                <img src="https://lh3.googleusercontent.com/d/17iFI9vo1npQGBOPUgDutxl3hOhXrXYYr" alt="Logo SCOPEX" class="w-full h-full object-contain" onerror="this.src='https://placehold.co/100x100/09090b/e11d48?text=S2'">
+            </div>
+            <div class="min-w-0">
+                <h1 class="text-xs font-display font-bold tracking-widest text-white uppercase truncate">SCOPEX VOL-II</h1>
+                <p class="text-[9px] text-tech-yellow font-mono tracking-widest uppercase truncate">Secure Internal Portal</p>
+            </div>
+        </div>
+
+        <div class="flex-1 px-4 py-6 space-y-6 overflow-y-auto min-h-0">
+            <div>
+                <span class="px-3 text-[9px] font-bold uppercase tracking-widest text-gray-500 block mb-3">MENU</span>
+                
+                <nav id="main-menu-zone" class="hidden space-y-2">
+                    <!-- Menu 1: Papan Peringkat Materi -->
+                    <div id="menu-group-peringkat-materi" class="space-y-1">
+                        <button onclick="toggleAccordion('submenu-Peringkat', 'icon-Peringkat')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white hover:bg-obsidian-800/60 transition-all text-left">
+                            <span class="flex items-center gap-3"><i class="fa-solid fa-ranking-star w-4 text-center text-tech-red"></i> Papan Peringkat Materi</span>
+                            <i id="icon-Peringkat" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200"></i>
+                        </button>
+                        <div id="submenu-Peringkat" class="hidden pl-6 space-y-1">
+                            <button id="sub-leaderboard-sd" onclick="switchMainView('leaderboard-sd')" class="w-full text-left px-4 py-2 text-[11px] text-gray-400 hover:text-white transition-all rounded-md"><i class="fa-solid fa-circle text-[4px] mr-2"></i> Peringkat Materi SD</button>
+                            <button id="sub-leaderboard-smp" onclick="switchMainView('leaderboard-smp')" class="w-full text-left px-4 py-2 text-[11px] text-gray-400 hover:text-white transition-all rounded-md"><i class="fa-solid fa-circle text-[4px] mr-2"></i> Peringkat Materi SMP</button>
+                        </div>
+                    </div>
+
+                    <!-- Menu 2: Papan Peringkat LKBB -->
+                    <div id="menu-group-peringkat-lkbb" class="space-y-1">
+                        <button onclick="toggleAccordion('submenu-lkbb', 'icon-lkbb')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white hover:bg-obsidian-800/60 transition-all text-left">
+                            <span class="flex items-center gap-3"><i class="fa-solid fa-flag w-4 text-center text-tech-blue"></i> Papan Peringkat LKBB</span>
+                            <i id="icon-lkbb" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200"></i>
+                        </button>
+                        <div id="submenu-lkbb" class="hidden pl-6 space-y-1">
+                            <button id="sub-lkbb-sd" onclick="switchMainView('lkbb-sd')" class="w-full text-left px-4 py-2 text-[11px] text-gray-400 hover:text-white transition-all rounded-md"><i class="fa-solid fa-circle text-[4px] mr-2"></i> Peringkat LKBB SD</button>
+                            <button id="sub-lkbb-smp" onclick="switchMainView('lkbb-smp')" class="w-full text-left px-4 py-2 text-[11px] text-gray-400 hover:text-white transition-all rounded-md"><i class="fa-solid fa-circle text-[4px] mr-2"></i> Peringkat LKBB SMP</button>
+                        </div>
+                    </div>
+
+                    <!-- Menu 3: Live Mata Materi -->
+                    <div id="menu-group-live-materi" class="space-y-1">
+                        <button onclick="toggleAccordion('submenu-live', 'icon-live')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white hover:bg-obsidian-800/60 transition-all text-left">
+                            <span class="flex items-center gap-3"><i class="fa-solid fa-satellite-dish w-4 text-center text-tech-yellow"></i> Live Materi</span>
+                            <i id="icon-live" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200"></i>
+                        </button>
+                        <div id="submenu-live" class="hidden pl-6 space-y-1">
+                            <button id="sub-live-sd" onclick="switchMainView('live-sd')" class="w-full text-left px-4 py-2 text-[11px] text-gray-400 hover:text-white transition-all rounded-md"><i class="fa-solid fa-circle text-[4px] mr-2"></i> Live Materi SD</button>
+                            <button id="sub-live-smp" onclick="switchMainView('live-smp')" class="w-full text-left px-4 py-2 text-[11px] text-gray-400 hover:text-white transition-all rounded-md"><i class="fa-solid fa-circle text-[4px] mr-2"></i> Live Materi SMP</button>
+                        </div>
+                    </div>
+
+                    <!-- Menu 4: Live LKBB -->
+                    <div id="menu-group-live-lkbb" class="space-y-1">
+                        <button onclick="toggleAccordion('submenu-live-lkbb', 'icon-live-lkbb')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white hover:bg-obsidian-800/60 transition-all text-left">
+                            <span class="flex items-center gap-3"><i class="fa-solid fa-video w-4 text-center text-purple-400"></i> Live LKBB</span>
+                            <i id="icon-live-lkbb" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200"></i>
+                        </button>
+                        <div id="submenu-live-lkbb" class="hidden pl-6 space-y-1">
+                            <button id="sub-live-lkbb-sd" onclick="switchMainView('live-lkbb-sd')" class="w-full text-left px-4 py-2 text-[11px] text-gray-400 hover:text-white transition-all rounded-md"><i class="fa-solid fa-circle text-[4px] mr-2"></i> Live LKBB SD</button>
+                            <button id="sub-live-lkbb-smp" onclick="switchMainView('live-lkbb-smp')" class="w-full text-left px-4 py-2 text-[11px] text-gray-400 hover:text-white transition-all rounded-md"><i class="fa-solid fa-circle text-[4px] mr-2"></i> Live LKBB SMP</button>
+                        </div>
+                    </div>
+
+                    <!-- Menu 5: Control Panel Admin & Juri -->
+                    <div id="admin-menu-container" class="hidden space-y-1">
+                        <button onclick="toggleAccordion('submenu-admin', 'icon-admin')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white hover:bg-obsidian-800/60 transition-all text-left">
+                            <span class="flex items-center gap-3"><i class="fa-solid fa-terminal w-4 text-center text-white"></i> Panel Juri & Admin</span>
+                            <i id="icon-admin" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200"></i>
+                        </button>
+                        <div id="submenu-admin" class="hidden pl-6 space-y-1">
+                            <button id="sub-admin-regis" onclick="switchMainView('admin-regis')" class="id-admin-only w-full text-left px-4 py-2 text-[11px] text-gray-400 hover:text-white transition-all rounded-md"><i class="fa-solid fa-user-plus text-[10px] mr-2 text-tech-red"></i> Regis Peserta</button>
+                            <button id="sub-admin-Nilai" onclick="switchMainView('admin-Nilai')" class="w-full text-left px-4 py-2 text-[11px] text-gray-400 hover:text-white transition-all rounded-md"><i class="fa-solid fa-pen-to-square text-[10px] mr-2 text-tech-yellow"></i> Input Nilai</button>
+                            <button id="sub-admin-db" onclick="switchMainView('admin-db')" class="id-admin-only w-full text-left px-4 py-2 text-[11px] text-gray-400 hover:text-white transition-all rounded-md"><i class="fa-solid fa-database text-[10px] mr-2 text-gray-400"></i> Kelola Database</button>
+                            <button id="sub-admin-akun" onclick="switchMainView('admin-akun')" class="id-admin-only w-full text-left px-4 py-2 text-[11px] text-gray-400 hover:text-white transition-all rounded-md"><i class="fa-solid fa-user-shield text-[10px] mr-2 text-tech-blue"></i> Kelola Akun Login</button>
+                        </div>
+                    </div>
+                </nav>
+
+                <div id="sidebar-fallback-text" class="px-4 py-4 text-[11px] text-gray-500 bg-obsidian-950 border border-obsidian-850 rounded-xl font-mono leading-relaxed">
+                    > Portal Dikunci.<br>> Hubungi Admin atau gunakan akun Juri/Regu Anda untuk mengakses informasi.
+                </div>
+            </div>
+        </div>
+
+        <!-- Profil Nav Zone: Ditambahkan mt-auto untuk memaksa nempel ke bagian bawah -->
+        <div class="p-4 border-t border-obsidian-800 bg-obsidian-950/50 shrink-0 mt-auto" id="auth-nav-zone"></div>
+    </aside>
+
+    <div id="sidebar-overlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-30 transition-opacity md:hidden"></div>
+
+    <main class="flex-grow p-4 md:p-8 flex flex-col min-w-0 w-full relative h-screen overflow-y-auto">
+        <div class="fixed inset-0 pointer-events-none flex items-center justify-center overflow-hidden z-[-1] p-8 opacity-[0.04]">
+            <img src="https://lh3.googleusercontent.com/d/17iFI9vo1npQGBOPUgDutxl3hOhXrXYYr" alt="Watermark" class="w-full max-w-[450px] md:max-w-[600px] aspect-square object-contain select-none pointer-events-none">
+        </div>
+
+        <div id="toast" class="hidden fixed bottom-5 right-5 bg-obsidian-900 border-l-4 border-l-tech-yellow text-white px-5 py-3.5 rounded-lg shadow-2xl z-50 flex items-center gap-3 transition-all duration-300 transform translate-y-0 opacity-100">
+            <i class="fa-solid fa-circle-check text-tech-yellow text-sm"></i> <span id="toast-msg" class="text-xs font-medium tracking-wide">Aksi Selesai.</span>
+        </div>
+        
+        <!-- SECTION: LOGIN -->
+        <section id="view-login" class="hidden max-w-md w-full mx-auto my-auto relative z-10 flex-col justify-center min-h-[80vh]">
+            <div class="bg-obsidian-900 rounded-2xl p-8 shadow-2xl border border-obsidian-800/80 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-tech-red via-tech-yellow to-tech-blue"></div>
+                <div class="text-center mb-8">
+                    <div class="w-20 h-20 bg-obsidian-950 border border-obsidian-800 rounded-2xl flex items-center justify-center mx-auto mb-4 p-2 shadow-inner">
+                        <img src="https://lh3.googleusercontent.com/d/17iFI9vo1npQGBOPUgDutxl3hOhXrXYYr" alt="Logo SCOPEX" class="w-full h-full object-contain animate-pulse">
+                    </div>
+                    <h2 class="text-sm font-display font-bold text-white tracking-widest uppercase">SCOPEX VOLUME II</h2>
+                    <p class="text-[10px] font-mono text-tech-yellow/70 mt-1">SYSTEM ONLINE RECAPITULATION BY RTD</p>
+                </div>
+                
+                <form id="form-login" class="space-y-4">
+                    <div>
+                        <label class="block text-[9px] font-mono uppercase tracking-widest text-gray-500 mb-1.5">Alamat Email</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-600 text-xs"><i class="fa-solid fa-envelope"></i></div>
+                            <input type="email" id="login-email" required autocomplete="email" class="w-full bg-obsidian-950 border border-obsidian-800 rounded-lg pl-9 pr-3 py-2.5 text-xs text-white focus:border-tech-yellow focus:outline-none transition-all" placeholder="nama@email.com">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-mono uppercase tracking-widest text-gray-500 mb-1.5">Password</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-600 text-xs"><i class="fa-solid fa-key"></i></div>
+                            <input type="password" id="login-password" required autocomplete="current-password" class="w-full bg-obsidian-950 border border-obsidian-800 rounded-lg pl-9 pr-10 py-2.5 text-xs text-white font-mono" placeholder="••••••••">
+                            <button type="button" onclick="togglePasswordVisibility('login-password', 'login-pwd-icon')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-tech-yellow transition px-1 py-1">
+                                <i id="login-pwd-icon" class="fa-solid fa-eye text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="login-confirm-wrap" class="hidden">
+                        <label class="block text-[9px] font-mono uppercase tracking-widest text-gray-500 mb-1.5">Konfirmasi Password</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-600 text-xs"><i class="fa-solid fa-key"></i></div>
+                            <input type="password" id="login-password-confirm" autocomplete="new-password" class="w-full bg-obsidian-950 border border-obsidian-800 rounded-lg pl-9 pr-3 py-2.5 text-xs text-white font-mono" placeholder="••••••••">
+                        </div>
+                    </div>
+                    <div id="login-error" class="hidden flex items-center gap-2 text-[10px] text-red-500 bg-red-950/20 border border-red-900/30 p-2.5 rounded-lg font-mono">
+                        <i class="fa-solid fa-triangle-exclamation"></i> <span id="login-error-text">Autentikasi gagal. Akses ditolak.</span>
+                    </div>
+                    <button type="submit" id="login-submit-btn" class="w-full bg-tech-red hover:bg-tech-red/95 text-white font-display font-bold py-3 rounded-lg transition-all text-xs tracking-widest uppercase mt-4 shadow-lg shadow-tech-red/10">
+                        LOGIN <i class="fa-solid fa-arrow-right-to-bracket ml-1"></i>
+                    </button>
+                    <p class="text-center text-[10px] font-mono text-gray-500">
+                        <span id="login-toggle-text">Belum punya akun?</span>
+                        <button type="button" onclick="toggleLoginMode()" id="login-toggle-btn" class="text-tech-yellow hover:underline font-bold">Daftar di sini</button>
+                    </p>
+                </form>
+
+                <div class="flex items-center gap-3 my-5">
+                    <div class="flex-1 h-px bg-obsidian-800"></div>
+                    <span class="text-[9px] font-mono text-gray-600 uppercase tracking-widest">Atau</span>
+                    <div class="flex-1 h-px bg-obsidian-800"></div>
+                </div>
+
+                <button type="button" onclick="handleGoogleLogin()" class="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-obsidian-950 font-display font-bold py-3 rounded-lg transition-all text-xs tracking-widest uppercase shadow-lg">
+                    <svg class="w-4 h-4" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.5 6 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.5 18.9 12 24 12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.5 6 29.5 4 24 4c-7.5 0-13.9 4.3-17.1 10.7z"/><path fill="#4CAF50" d="M24 44c5.4 0 10.3-1.9 14-5.7l-6.5-5.5c-2 1.5-4.6 2.4-7.5 2.4-5.3 0-9.7-3.4-11.3-8.1l-6.6 5.1C9.9 39.6 16.4 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.4l6.5 5.5C41.5 35.9 44 30.4 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
+                    Masuk dengan Google
+                </button>
+
+                <p class="text-center text-[9px] font-mono text-gray-600 mt-5 leading-relaxed">
+                    <i class="fa-solid fa-circle-info mr-1"></i> Akun baru perlu diaktifkan Admin sebelum bisa mengakses sistem.
+                </p>
+            </div>
+        </section>
+
+        <!-- SECTION: PROFIL PENGGUNA -->
+        <section id="view-profil" class="hidden flex-col gap-6 w-full z-10 max-w-2xl mx-auto">
+            <div class="pb-4 border-b border-obsidian-800">
+                <h2 class="text-xl font-display font-bold text-white tracking-widest uppercase">Profil Pengguna</h2>
+                <p class="text-xs text-gray-400 font-mono mt-1">> Kelola kredensial akun dan preferensi tampilan Anda</p>
+            </div>
+            
+            <div class="bg-obsidian-900 border border-obsidian-800 rounded-xl p-6 shadow-xl relative overflow-hidden">
+                <form id="form-profil" class="space-y-6 relative z-10">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6 pb-6 border-b border-obsidian-800/50">
+                        <div class="relative w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-obsidian-950 border border-obsidian-700 flex items-center justify-center overflow-hidden shrink-0 group shadow-inner">
+                            <img id="profil-preview-avatar" src="" class="w-full h-full object-cover hidden">
+                            <i id="profil-icon-avatar" class="fa-solid fa-user-astronaut text-3xl text-gray-500"></i>
+                            <label class="absolute inset-0 bg-black/70 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-all duration-300 backdrop-blur-sm">
+                                <i class="fa-solid fa-camera text-white text-lg mb-1"></i>
+                                <span class="text-[8px] font-mono text-gray-300 uppercase">Ubah</span>
+                                <input type="file" id="profil-input-avatar" accept="image/*" class="hidden" onchange="handleAvatarUpload(event)">
+                            </label>
+                        </div>
+                        <div class="flex flex-col min-w-0">
+                            <h3 id="profil-role-badge" class="text-[10px] font-mono text-tech-yellow uppercase tracking-widest mb-1.5">ROLE</h3>
+                            <div class="text-xs text-gray-400 leading-relaxed max-w-md">Klik ikon avatar di samping untuk mengubah foto profil Anda. Sistem menerima gambar hingga ukuran 1MB (jpg/png).</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-[9px] font-mono text-gray-500 mb-1.5 uppercase">Username / Display Name</label>
+                            <input type="text" id="profil-username" class="w-full bg-obsidian-950 border border-obsidian-800 rounded-lg px-4 py-3 text-xs text-white focus:border-tech-yellow focus:outline-none transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-mono text-gray-500 mb-1.5 uppercase">Alamat Email (Akun Login)</label>
+                            <input type="email" id="profil-email" disabled class="w-full bg-obsidian-950/60 border border-obsidian-800 rounded-lg px-4 py-3 text-xs text-gray-400 cursor-not-allowed" placeholder="email@domain.com">
+                        </div>
+                        <div class="md:col-span-2 pt-2" id="profil-password-wrap">
+                            <label class="block text-[9px] font-mono text-gray-500 mb-1.5 uppercase">Ubah Password Login</label>
+                            <div class="relative">
+                                <input type="password" id="profil-password" class="w-full bg-obsidian-950 border border-obsidian-800 rounded-lg pl-4 pr-10 py-3 text-xs text-white font-mono focus:border-tech-yellow focus:outline-none transition-all" placeholder="Biarkan kosong jika tidak ingin mengubah password" minlength="6">
+                                <button type="button" onclick="togglePasswordVisibility('profil-password', 'profil-pwd-icon2')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-tech-yellow transition px-1 py-1">
+                                    <i id="profil-pwd-icon2" class="fa-solid fa-eye text-xs"></i>
+                                </button>
+                            </div>
+                            <p id="profil-password-hint" class="text-[9px] font-mono text-gray-500 mt-2">> Minimal 6 karakter. Kosongkan jika tidak ingin mengubah password.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="pt-2 flex flex-col sm:flex-row justify-end gap-3">
+                        <button type="button" onclick="loadProfilData()" class="w-full sm:w-auto px-6 py-3 rounded-lg text-xs font-bold uppercase tracking-wider bg-obsidian-800 hover:bg-obsidian-750 text-white transition-all text-center">Reset Form</button>
+                        <button type="submit" class="w-full sm:w-auto px-6 py-3 rounded-lg text-xs font-bold uppercase tracking-wider bg-tech-yellow text-black hover:bg-yellow-500 transition-all shadow-lg shadow-tech-yellow/10 text-center"><i class="fa-solid fa-floppy-disk mr-2"></i> Simpan Profil</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- SECTION: LEADERBOARD SD -->
+        <section id="view-leaderboard-sd" class="hidden flex-col gap-6 w-full z-10 max-w-6xl mx-auto">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3 pb-4 border-b border-obsidian-800">
+                <div>
+                    <h2 class="text-xl font-display font-bold text-white tracking-widest uppercase">Peringkat Materi SD</h2>
+                    <p class="text-xs text-tech-red font-mono mt-1">> Nilai Keseluruhan Materi Tingkat SD</p>
+                </div>
+                <button onclick="downloadLeaderboardPDF('SD')" class="w-full sm:w-auto text-[11px] font-mono text-tech-yellow border border-tech-yellow/30 hover:bg-tech-yellow/10 px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-file-arrow-down"></i> UNDUH PDF Peringkat SD
+                </button>
+            </div>
+            <div class="bg-obsidian-900 border border-obsidian-800 rounded-xl overflow-hidden flex flex-col shadow-xl">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs whitespace-nowrap">
+                        <thead>
+                            <tr class="bg-obsidian-950/80 text-gray-500 font-mono text-[9px] uppercase tracking-widest border-b border-obsidian-800">
+                                <th class="py-3 px-5 w-16 text-center">Rank</th><th class="py-3 px-5">Nama Regu</th><th class="py-3 px-5">Asal Sekolah</th><th class="py-3 px-5 text-right">Total Nilai</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-sd-body" class="divide-y divide-obsidian-800 text-gray-300"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: LEADERBOARD SMP -->
+        <section id="view-leaderboard-smp" class="hidden flex-col gap-6 w-full z-10 max-w-6xl mx-auto">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3 pb-4 border-b border-obsidian-800">
+                <div>
+                    <h2 class="text-xl font-display font-bold text-white tracking-widest uppercase">Peringkat Materi SMP</h2>
+                    <p class="text-xs text-tech-yellow font-mono mt-1">> Nilai Keseluruhan Materi Tingkat SMP</p>
+                </div>
+                <button onclick="downloadLeaderboardPDF('SMP')" class="w-full sm:w-auto text-[11px] font-mono text-tech-red border border-tech-red/30 hover:bg-tech-red/10 px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-file-arrow-down"></i> UNDUH PDF Peringkat SMP
+                </button>
+            </div>
+            <div class="bg-obsidian-900 border border-obsidian-800 rounded-xl overflow-hidden flex flex-col shadow-xl">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs whitespace-nowrap">
+                        <thead>
+                            <tr class="bg-obsidian-950/80 text-gray-500 font-mono text-[9px] uppercase tracking-widest border-b border-obsidian-800">
+                                <th class="py-3 px-5 w-16 text-center">Rank</th><th class="py-3 px-5">Nama Regu</th><th class="py-3 px-5">Asal Sekolah</th><th class="py-3 px-5 text-right">Total Nilai</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-smp-body" class="divide-y divide-obsidian-800 text-gray-300"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: LKBB SD -->
+        <section id="view-lkbb-sd" class="hidden flex-col gap-6 w-full z-10 max-w-6xl mx-auto">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3 pb-4 border-b border-obsidian-800">
+                <div>
+                    <h2 class="text-xl font-display font-bold text-white tracking-widest uppercase">Peringkat LKBB SD</h2>
+                    <p class="text-xs text-tech-blue font-mono mt-1">> Hasil Penilaian Total Semua Juri</p>
+                </div>
+                <button onclick="downloadLkbbPDF('SD')" class="w-full sm:w-auto text-[11px] font-mono text-tech-blue border border-tech-blue/30 hover:bg-tech-blue/10 px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-file-arrow-down"></i> UNDUH PDF LKBB SD
+                </button>
+            </div>
+            <div class="bg-obsidian-900 border border-obsidian-800 rounded-xl overflow-hidden flex flex-col shadow-xl">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs whitespace-nowrap">
+                        <thead>
+                            <tr class="bg-obsidian-950/80 text-gray-500 font-mono text-[9px] uppercase tracking-widest border-b border-obsidian-800">
+                                <th class="py-3 px-5 w-16 text-center">Rank</th><th class="py-3 px-5">Sekolah / Basis</th><th class="py-3 px-5 text-right">Nilai Akhir</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-lkbb-sd-body" class="divide-y divide-obsidian-800 text-gray-300"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: LKBB SMP -->
+        <section id="view-lkbb-smp" class="hidden flex-col gap-6 w-full z-10 max-w-6xl mx-auto">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3 pb-4 border-b border-obsidian-800">
+                <div>
+                    <h2 class="text-xl font-display font-bold text-white tracking-widest uppercase">Peringkat LKBB SMP</h2>
+                    <p class="text-xs text-purple-400 font-mono mt-1">> Hasil Penilaian Total Semua Juri</p>
+                </div>
+                <button onclick="downloadLkbbPDF('SMP')" class="w-full sm:w-auto text-[11px] font-mono text-purple-400 border border-purple-400/30 hover:bg-purple-400/10 px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-file-arrow-down"></i> UNDUH PDF LKBB SMP
+                </button>
+            </div>
+            <div class="bg-obsidian-900 border border-obsidian-800 rounded-xl overflow-hidden flex flex-col shadow-xl">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs whitespace-nowrap">
+                        <thead>
+                            <tr class="bg-obsidian-950/80 text-gray-500 font-mono text-[9px] uppercase tracking-widest border-b border-obsidian-800">
+                                <th class="py-3 px-5 w-16 text-center">Rank</th><th class="py-3 px-5">Sekolah / Basis</th><th class="py-3 px-5 text-right">Nilai Akhir</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-lkbb-smp-body" class="divide-y divide-obsidian-800 text-gray-300"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: LIVE SD -->
+        <section id="view-live-sd" class="hidden flex-col gap-6 w-full z-10 max-w-6xl mx-auto">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3 pb-4 border-b border-obsidian-800">
+                <div><h2 class="text-xl font-display font-bold text-white tracking-widest uppercase">Live Materi SD</h2></div>
+                <button onclick="downloadLiveReportPDF('SD')" class="w-full sm:w-auto text-[11px] font-mono text-tech-yellow border border-tech-yellow/30 hover:bg-tech-yellow/10 px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"><i class="fa-solid fa-file-arrow-down"></i> UNDUH PDF LIVE</button>
+            </div>
+            <div class="flex items-center gap-2 p-1 bg-obsidian-900 border border-obsidian-800 rounded-lg w-fit">
+                <button onclick="switchLiveSubGender('Putra SD')" id="btn-gender-pasd" class="px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-tech-red text-white">PUTRA SD</button>
+                <button onclick="switchLiveSubGender('Putri SD')" id="btn-gender-pisd" class="px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider text-gray-400 hover:text-white">PUTRI SD</button>
+            </div>
+            <div id="live-report-sd-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+        </section>
+
+        <!-- SECTION: LIVE SMP -->
+        <section id="view-live-smp" class="hidden flex-col gap-6 w-full z-10 max-w-6xl mx-auto">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3 pb-4 border-b border-obsidian-800">
+                <div><h2 class="text-xl font-display font-bold text-white tracking-widest uppercase">Live Materi SMP</h2></div>
+                <button onclick="downloadLiveReportPDF('SMP')" class="w-full sm:w-auto text-[11px] font-mono text-tech-red border border-tech-red/30 hover:bg-tech-red/10 px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"><i class="fa-solid fa-file-arrow-down"></i> UNDUH PDF LIVE</button>
+            </div>
+            <div class="flex items-center gap-2 p-1 bg-obsidian-900 border border-obsidian-800 rounded-lg w-fit">
+                <button onclick="switchLiveSubGender('Putra SMP')" id="btn-gender-pasmp" class="px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-tech-yellow text-black">PUTRA SMP</button>
+                <button onclick="switchLiveSubGender('Putri SMP')" id="btn-gender-pismp" class="px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider text-gray-400 hover:text-white">PUTRI SMP</button>
+            </div>
+            <div id="live-report-smp-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+        </section>
+
+        <!-- SECTION: LIVE LKBB SD -->
+        <section id="view-live-lkbb-sd" class="hidden flex-col gap-6 w-full z-10 max-w-6xl mx-auto">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3 pb-4 border-b border-obsidian-800">
+                <div>
+                    <h2 class="text-xl font-display font-bold text-white tracking-widest uppercase">Live LKBB SD</h2>
+                    <p class="text-xs text-gray-400 font-mono mt-1">> Nilai Pasukan LKBB berdasarkan Juri</p>
+                </div>
+                <button onclick="downloadLiveLkbbPDF('SD')" class="w-full sm:w-auto text-[11px] font-mono text-tech-blue border border-tech-blue/30 hover:bg-tech-blue/10 px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"><i class="fa-solid fa-file-arrow-down"></i> UNDUH PDF LKBB</button>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 p-1 bg-obsidian-900 border border-obsidian-800 rounded-lg w-fit">
+                <button onclick="switchLiveLkbbTab('SD', 'juri1')" id="tab-live-lkbb-sd-juri1" class="px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-tech-blue text-white">REKAP JURI 1</button>
+                <button onclick="switchLiveLkbbTab('SD', 'juri2')" id="tab-live-lkbb-sd-juri2" class="px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider text-gray-400 hover:text-white">REKAP JURI 2</button>
+                <button onclick="switchLiveLkbbTab('SD', 'vapor')" id="tab-live-lkbb-sd-vapor" class="px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider text-gray-400 hover:text-white">REKAP JURI VAPOR</button>
+            </div>
+            <div class="bg-obsidian-900 border border-obsidian-800 rounded-xl overflow-hidden flex flex-col shadow-xl">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs whitespace-nowrap">
+                        <thead>
+                            <tr class="bg-obsidian-950/80 text-gray-500 font-mono text-[9px] uppercase tracking-widest border-b border-obsidian-800">
+                                <th class="py-3 px-5 w-16 text-center">No</th><th class="py-3 px-5">Sekolah / Basis</th><th class="py-3 px-5 text-right">Nilai Juri</th>
+                            </tr>
+                        </thead>
+                        <tbody id="live-lkbb-sd-body" class="divide-y divide-obsidian-800 text-gray-300"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: LIVE LKBB SMP -->
+        <section id="view-live-lkbb-smp" class="hidden flex-col gap-6 w-full z-10 max-w-6xl mx-auto">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3 pb-4 border-b border-obsidian-800">
+                <div>
+                    <h2 class="text-xl font-display font-bold text-white tracking-widest uppercase">Live LKBB SMP</h2>
+                    <p class="text-xs text-gray-400 font-mono mt-1">> Nilai Pasukan LKBB berdasarkan Juri</p>
+                </div>
+                <button onclick="downloadLiveLkbbPDF('SMP')" class="w-full sm:w-auto text-[11px] font-mono text-purple-400 border border-purple-400/30 hover:bg-purple-400/10 px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"><i class="fa-solid fa-file-arrow-down"></i> UNDUH PDF LKBB</button>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 p-1 bg-obsidian-900 border border-obsidian-800 rounded-lg w-fit">
+                <button onclick="switchLiveLkbbTab('SMP', 'juri1')" id="tab-live-lkbb-smp-juri1" class="px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-purple-500 text-white">REKAP JURI 1</button>
+                <button onclick="switchLiveLkbbTab('SMP', 'juri2')" id="tab-live-lkbb-smp-juri2" class="px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider text-gray-400 hover:text-white">REKAP JURI 2</button>
+                <button onclick="switchLiveLkbbTab('SMP', 'vapor')" id="tab-live-lkbb-smp-vapor" class="px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider text-gray-400 hover:text-white">REKAP JURI VAPOR</button>
+            </div>
+            <div class="bg-obsidian-900 border border-obsidian-800 rounded-xl overflow-hidden flex flex-col shadow-xl">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs whitespace-nowrap">
+                        <thead>
+                            <tr class="bg-obsidian-950/80 text-gray-500 font-mono text-[9px] uppercase tracking-widest border-b border-obsidian-800">
+                                <th class="py-3 px-5 w-16 text-center">No</th><th class="py-3 px-5">Sekolah / Basis</th><th class="py-3 px-5 text-right">Nilai Juri</th>
+                            </tr>
+                        </thead>
+                        <tbody id="live-lkbb-smp-body" class="divide-y divide-obsidian-800 text-gray-300"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: ADMIN REGIS -->
+        <section id="view-admin-regis" class="hidden flex-col gap-6 w-full z-10 max-w-3xl mx-auto id-admin-only">
+            <div class="pb-4 border-b border-obsidian-800">
+                <h2 class="text-xl font-display font-bold text-white tracking-widest uppercase">Registrasi Peserta</h2>
+                <p class="text-xs text-gray-400 font-mono mt-1">> Tambah data Regu Materi & Pasukan LKBB</p>
+            </div>
+
+            <div class="flex items-center gap-2 mb-2 bg-obsidian-900 border border-obsidian-800 p-1 rounded-lg w-fit">
+                <button type="button" onclick="switchRegisTab('materi')" id="tab-regis-materi" class="px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all bg-tech-red text-white">Regu Materi</button>
+                <button type="button" onclick="switchRegisTab('lkbb')" id="tab-regis-lkbb" class="px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all text-gray-400 hover:text-white">Pasukan LKBB</button>
+            </div>
+
+            <div class="bg-obsidian-900 p-6 rounded-xl border border-obsidian-800 relative overflow-hidden">
+                <!-- FORM REGU MATERI -->
+                <div id="wrapper-regis-materi">
+                    <form id="form-add-peserta" class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[9px] font-mono text-gray-500 mb-1.5 uppercase">Kategori Tingkat</label>
+                                <select id="p-kategori" onchange="generateAutomatedNoPeserta()" class="w-full bg-obsidian-950 border border-obsidian-800 rounded-lg px-3 py-2.5 text-xs text-white focus:border-tech-red focus:outline-none appearance-none">
+                                    <option value="Putra SD" class="bg-obsidian-900">Putra SD</option><option value="Putri SD" class="bg-obsidian-900">Putri SD</option>
+                                    <option value="Putra SMP" class="bg-obsidian-900">Putra SMP</option><option value="Putri SMP" class="bg-obsidian-900">Putri SMP</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[9px] font-mono text-gray-500 mb-1.5 uppercase">ID Otomatis</label>
+                                <input type="text" id="p-nopeserta" readonly class="w-full bg-obsidian-950 border border-obsidian-800 rounded-lg px-3 py-2.5 text-xs text-tech-yellow font-mono font-bold cursor-not-allowed">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-mono text-gray-500 mb-1.5 uppercase">Nama Regu (Materi)</label>
+                            <input type="text" id="p-nama" required class="w-full bg-obsidian-950 border border-obsidian-800 rounded-lg px-3 py-2.5 text-xs text-white focus:border-tech-red focus:outline-none" placeholder="Contoh: Elang Sakti">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-mono text-gray-500 mb-1.5 uppercase">Asal Sekolah / Basis</label>
+                            <input type="text" id="p-pangkalan" required class="w-full bg-obsidian-950 border border-obsidian-800 rounded-lg px-3 py-2.5 text-xs text-white focus:border-tech-red focus:outline-none" placeholder="Contoh: SDN 1 Baleendah">
+                        </div>
+                        <button type="submit" class="w-full bg-tech-red hover:bg-tech-red/80 text-white font-display font-bold uppercase tracking-wider py-3 rounded-lg text-xs transition-all">SIMPAN REGU</button>
+                    </form>
+                </div>
+
+                <!-- FORM PASUKAN LKBB -->
+                <div id="wrapper-regis-lkbb" class="hidden">
+                    <form id="form-add-peserta-lkbb" class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[9px] font-mono text-gray-500 mb-1.5 uppercase">Kategori LKBB</label>
+                                <select id="p-kategori-lkbb" onchange="generateAutomatedNoPesertaLkbb()" class="w-full bg-obsidian-950 border border-obsidian-800 rounded-lg px-3 py-2.5 text-xs text-white focus:border-tech-blue focus:outline-none appearance-none">
+                                    <option value="SD" class="bg-obsidian-900">Tingkat SD</option>
+                                    <option value="SMP" class="bg-obsidian-900">Tingkat SMP</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[9px] font-mono text-gray-500 mb-1.5 uppercase">ID Otomatis LKBB</label>
+                                <input type="text" id="p-nopeserta-lkbb" readonly class="w-full bg-obsidian-950 border border-obsidian-800 rounded-lg px-3 py-2.5 text-xs text-tech-blue font-mono font-bold cursor-not-allowed">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-mono text-gray-500 mb-1.5 uppercase">Asal Sekolah / Basis</label>
+                            <input type="text" id="p-pangkalan-lkbb" required class="w-full bg-obsidian-950 border border-obsidian-800 rounded-lg px-3 py-2.5 text-xs text-white focus:border-tech-blue focus:outline-none" placeholder="Contoh: SDN 1 Baleendah">
+                        </div>
+                        <button type="submit" class="w-full bg-tech-blue hover:bg-blue-600 text-white font-display font-bold uppercase tracking-wider py-3 rounded-lg text-xs transition-all">SIMPAN PASUKAN LKBB</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: ADMIN INPUT NILAI -->
+        <section id="view-admin-Nilai" class="hidden flex-col gap-6 w-full z-10 max-w-4xl mx-auto">
+            <div class="pb-4 border-b border-obsidian-800">
+                <h2 class="text-xl font-display font-bold text-white tracking-widest uppercase">Input Nilai LKBB dan Variasi Formasi</h2>
+                <p class="text-xs text-gray-400 font-mono mt-1" id="score-desc">> Input atau Ubah Nilai Secara Realtime</p>
+            </div>
+
+            <div class="flex items-center gap-2 mb-2 bg-obsidian-900 border border-obsidian-800 p-1 rounded-lg w-fit">
+                <button type="button" onclick="switchNilaiTab('materi')" id="tab-nilai-materi" class="px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all bg-tech-yellow text-black">Nilai Materi</button>
+                <button type="button" onclick="switchNilaiTab('lkbb')" id="tab-nilai-lkbb" class="px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all text-gray-400 hover:text-white">Nilai LKBB</button>
+            </div>
+
+            <div class="bg-obsidian-900 p-6 rounded-xl border border-obsidian-800">
+                <!-- FORM NILAI MATERI -->
+                <div id="wrapper-nilai-materi">
+                    <form id="form-input-nilai" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-[9px] font-mono text-gray-500 mb-1.5 uppercase">1. Filter Kategori</label>
+                            <select id="score-kategori" onchange="updateAdminPesertaDropdown()" class="w-full bg-obsidian-950 border border-obsidian-800 rounded-lg px-3 py-2.5 text-xs text-white focus:border-tech-yellow focus:outline-none">
+                                <option value="Putra SD" class="bg-obsidian-900">Putra SD</option><option value="Putri SD" class="bg-obsidian-900">Putri SD</option>
+                                <option value="Putra SMP" class="bg-obsidian-900">Putra SMP</option><option value="Putri SMP" class="bg-obsidian-900">Putri SMP</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-mono text-gray-500 mb-1.5 uppercase">2. Pilih Nama Regu</label>
+                            <select id="score-peserta" required class="w-full bg-obsidian-950 border border-obsidian-800 rounded-lg px-3 py-2.5 text-xs text-white focus:border-tech-yellow focus:outline-none"></select>
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-mono text-gray-500 mb-1.5 uppercase">3. Mata Materi</label>
+                            <select id="score-Materi" class="w-full bg-obsidian-950 border border-obsidian-800 rounded-lg px-3 py-2.5 text-xs text-white focus:border-tech-yellow focus:outline-none"></select>
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-mono text-gray-500 mb-1.5 uppercase">4. Nilai (0-100)</label>
+                            <input type="number" id="score-nilai" min="0" max="100" step="0.1" required class="w-full bg-obsidian-950 border border-obsidian-800 rounded-lg px-3 py-2.5 text-xs text-white font-mono focus:border-tech-yellow focus:outline-none" placeholder="00.0">
+                        </div>
+                        <div class="md:col-span-2 pt-2">
+                            <button type="submit" class="w-full bg-tech-yellow hover:bg-tech-yellow/80 text-black font-display font-bold py-3 rounded-lg text-xs uppercase tracking-widest transition-all">Input Nilai Materi</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- FORM NILAI LKBB BERDASARKAN GERAKAN -->
+                <div id="wrapper-nilai-lkbb" class="hidden">
+                    <form id="form-input-nilai-lkbb" class="space-y-5">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 border-b border-obsidian-800 pb-5">
+                            <div>
+                                <label class="block text-[9px] font-mono text-gray-500 mb-1.5 uppercase">Kategori Tingkat LKBB</label>
+                                <select id="score-kategori-lkbb" onchange="setupLkbbInputForm(); updateAdminPesertaLkbbDropdown();" class="w-full bg-obsidian-950 border border-obsidian-800 rounded-lg px-3 py-2.5 text-xs text-white focus:border-tech-blue focus:outline-none">
+                                    <option value="SD" class="bg-obsidian-900">SD</option><option value="SMP" class="bg-obsidian-900">SMP</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[9px] font-mono text-gray-500 mb-1.5 uppercase">Identitas Juri</label>
+                                <select id="score-juri-lkbb" class="w-full bg-obsidian-950 border border-obsidian-800 rounded-lg px-3 py-2.5 text-xs text-white focus:border-tech-blue focus:outline-none">
+                                    <option value="juri1" class="bg-obsidian-900">JURI 1</option>
+                                    <option value="juri2" class="bg-obsidian-900">JURI 2</option>
+                                    <option value="vapor" class="bg-obsidian-900">JURI VAPOR</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[9px] font-mono text-gray-500 mb-1.5 uppercase">Pilih Pasukan LKBB</label>
+                                <select id="score-peserta-lkbb" required class="w-full bg-obsidian-950 border border-obsidian-800 rounded-lg px-3 py-2.5 text-xs text-white focus:border-tech-blue focus:outline-none"></select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-[10px] font-mono text-tech-blue uppercase tracking-widest mb-4">Format Penilaian LKBB dan Variasi Formasi (50 - 100)</h3>
+                            <!-- Container Dinamis untuk Gerakan -->
+                            <div id="lkbb-movements-container" class="flex flex-col gap-3">
+                                <!-- Gerakan akan diinject disini -->
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t border-obsidian-800">
+                            <button type="submit" class="w-full bg-tech-blue hover:bg-blue-600 text-white font-display font-bold py-3 rounded-lg text-xs uppercase tracking-widest transition-all">Submit Penilaian Gerakan LKBB</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: ADMIN DB -->
+        <section id="view-admin-db" class="hidden flex-col gap-6 w-full z-10 max-w-6xl mx-auto id-admin-only">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3 pb-4 border-b border-obsidian-800">
+                <div>
+                    <h2 class="text-xl font-display font-bold text-white tracking-widest uppercase">Grid Manager Database</h2>
+                    <p class="text-xs text-gray-400 font-mono mt-1">> Panel pemantauan lengkap dan opsi reset sistem</p>
+                </div>
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <button onclick="confirmLoadSimulasiData()" class="flex-1 sm:flex-none text-[10px] font-mono text-tech-yellow border border-tech-yellow/20 hover:bg-tech-yellow/10 px-3 py-2 rounded-lg transition-colors">INJECT SIMULASI</button>
+                    <button onclick="confirmClearDatabase()" class="flex-1 sm:flex-none text-[10px] font-mono text-red-500 border border-red-500/20 hover:bg-red-500/10 px-3 py-2 rounded-lg transition-colors">RESET DATABASE</button>
+                </div>
+            </div>
+
+            <!-- Database Reguler Materi -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-obsidian-900 border border-obsidian-800 rounded-xl overflow-hidden p-4">
+                    <h4 class="text-[10px] font-mono text-tech-red uppercase tracking-wider mb-3 border-b border-obsidian-800 pb-1">DATABASE // PUTRA SD</h4>
+                    <div class="overflow-y-auto max-h-64"><table class="w-full text-left text-xs"><tbody id="table-manajer-pasd" class="divide-y divide-obsidian-800"></tbody></table></div>
+                </div>
+                <div class="bg-obsidian-900 border border-obsidian-800 rounded-xl overflow-hidden p-4">
+                    <h4 class="text-[10px] font-mono text-tech-yellow uppercase tracking-wider mb-3 border-b border-obsidian-800 pb-1">DATABASE // PUTRI SD</h4>
+                    <div class="overflow-y-auto max-h-64"><table class="w-full text-left text-xs"><tbody id="table-manajer-pisd" class="divide-y divide-obsidian-800"></tbody></table></div>
+                </div>
+                <div class="bg-obsidian-900 border border-obsidian-800 rounded-xl overflow-hidden p-4">
+                    <h4 class="text-[10px] font-mono text-tech-red uppercase tracking-wider mb-3 border-b border-obsidian-800 pb-1">DATABASE // PUTRA SMP</h4>
+                    <div class="overflow-y-auto max-h-64"><table class="w-full text-left text-xs"><tbody id="table-manajer-pasmp" class="divide-y divide-obsidian-800"></tbody></table></div>
+                </div>
+                <div class="bg-obsidian-900 border border-obsidian-800 rounded-xl overflow-hidden p-4">
+                    <h4 class="text-[10px] font-mono text-tech-yellow uppercase tracking-wider mb-3 border-b border-obsidian-800 pb-1">DATABASE // PUTRI SMP</h4>
+                    <div class="overflow-y-auto max-h-64"><table class="w-full text-left text-xs"><tbody id="table-manajer-pismp" class="divide-y divide-obsidian-800"></tbody></table></div>
+                </div>
+            </div>
+
+            <!-- Database Tambahan LKBB -->
+            <h3 class="text-lg font-display font-bold text-white tracking-widest uppercase mt-6 mb-2 border-b border-obsidian-800 pb-2">Database LKBB</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-obsidian-900 border border-obsidian-800 rounded-xl overflow-hidden p-4">
+                    <h4 class="text-[10px] font-mono text-tech-blue uppercase tracking-wider mb-3 border-b border-obsidian-800 pb-1">DATABASE // LKBB SD</h4>
+                    <div class="overflow-y-auto max-h-64"><table class="w-full text-left text-xs"><tbody id="table-manajer-lkbb-sd" class="divide-y divide-obsidian-800"></tbody></table></div>
+                </div>
+                <div class="bg-obsidian-900 border border-obsidian-800 rounded-xl overflow-hidden p-4">
+                    <h4 class="text-[10px] font-mono text-purple-400 uppercase tracking-wider mb-3 border-b border-obsidian-800 pb-1">DATABASE // LKBB SMP</h4>
+                    <div class="overflow-y-auto max-h-64"><table class="w-full text-left text-xs"><tbody id="table-manajer-lkbb-smp" class="divide-y divide-obsidian-800"></tbody></table></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: KELOLA AKUN LOGIN (FIREBASE AUTH) -->
+        <section id="view-admin-akun" class="hidden flex-col gap-6 w-full z-10 max-w-4xl mx-auto id-admin-only">
+            <div class="pb-4 border-b border-obsidian-800">
+                <h2 class="text-xl font-display font-bold text-white tracking-widest uppercase">Kelola Akun Login</h2>
+                <p class="text-xs text-gray-400 font-mono mt-1">> Berikan akses (role) untuk akun email/Google yang sudah mendaftar</p>
+            </div>
+
+            <div class="bg-obsidian-900 border border-obsidian-800 rounded-xl p-6 shadow-xl">
+                <form id="form-tambah-akun" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[9px] font-mono text-gray-500 mb-1.5 uppercase">Email Akun</label>
+                            <input type="email" id="akun-email" required class="w-full bg-obsidian-950 border border-obsidian-800 rounded-lg px-3 py-2.5 text-xs text-white focus:border-tech-blue focus:outline-none" placeholder="user@email.com">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-mono text-gray-500 mb-1.5 uppercase">Nama Tampilan (Opsional)</label>
+                            <input type="text" id="akun-nama" class="w-full bg-obsidian-950 border border-obsidian-800 rounded-lg px-3 py-2.5 text-xs text-white focus:border-tech-blue focus:outline-none" placeholder="Otomatis dari role bila kosong">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[9px] font-mono text-gray-500 mb-1.5 uppercase">Role / Akses</label>
+                        <select id="akun-role" onchange="handleAkunRoleChange()" class="w-full bg-obsidian-950 border border-obsidian-800 rounded-lg px-3 py-2.5 text-xs text-white focus:border-tech-blue focus:outline-none">
+                            <option value="admin" class="bg-obsidian-900">Admin (Super Admin)</option>
+                            <option value="sub-admin" class="bg-obsidian-900">Juri Materi</option>
+                            <option value="sub-admin-lkbb" class="bg-obsidian-900">Juri LKBB</option>
+                            <option value="peserta-materi" class="bg-obsidian-900">Peserta Materi</option>
+                            <option value="peserta-lkbb" class="bg-obsidian-900">Peserta LKBB</option>
+                        </select>
+                    </div>
+
+                    <div id="wrapper-akun-materi" class="hidden">
+                        <label class="block text-[9px] font-mono text-gray-500 mb-1.5 uppercase">Bidang Materi</label>
+                        <select id="akun-materi" class="w-full bg-obsidian-950 border border-obsidian-800 rounded-lg px-3 py-2.5 text-xs text-white focus:border-tech-blue focus:outline-none"></select>
+                    </div>
+
+                    <div id="wrapper-akun-lkbb" class="hidden grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[9px] font-mono text-gray-500 mb-1.5 uppercase">Tier</label>
+                            <select id="akun-lkbb-tier" class="w-full bg-obsidian-950 border border-obsidian-800 rounded-lg px-3 py-2.5 text-xs text-white focus:border-tech-blue focus:outline-none">
+                                <option value="SD" class="bg-obsidian-900">SD</option>
+                                <option value="SMP" class="bg-obsidian-900">SMP</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-mono text-gray-500 mb-1.5 uppercase">Juri Ke-</label>
+                            <select id="akun-lkbb-juri" class="w-full bg-obsidian-950 border border-obsidian-800 rounded-lg px-3 py-2.5 text-xs text-white focus:border-tech-blue focus:outline-none">
+                                <option value="1" class="bg-obsidian-900">Juri 1</option>
+                                <option value="2" class="bg-obsidian-900">Juri 2</option>
+                                <option value="vapor" class="bg-obsidian-900">Vapor</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="wrapper-akun-peserta-materi" class="hidden">
+                        <label class="block text-[9px] font-mono text-gray-500 mb-1.5 uppercase">Regu Peserta Materi</label>
+                        <select id="akun-peserta-materi" class="w-full bg-obsidian-950 border border-obsidian-800 rounded-lg px-3 py-2.5 text-xs text-white focus:border-tech-blue focus:outline-none"></select>
+                    </div>
+
+                    <div id="wrapper-akun-peserta-lkbb" class="hidden">
+                        <label class="block text-[9px] font-mono text-gray-500 mb-1.5 uppercase">Pasukan Peserta LKBB</label>
+                        <select id="akun-peserta-lkbb" class="w-full bg-obsidian-950 border border-obsidian-800 rounded-lg px-3 py-2.5 text-xs text-white focus:border-tech-blue focus:outline-none"></select>
+                    </div>
+
+                    <button type="submit" class="w-full bg-tech-blue hover:bg-tech-blue/90 text-white font-display font-bold py-3 rounded-lg transition-all text-xs tracking-widest uppercase mt-2 shadow-lg shadow-tech-blue/10">
+                        <i class="fa-solid fa-user-check mr-1"></i> Berikan Akses
+                    </button>
+                    <p class="text-[9px] font-mono text-gray-500">> Akun harus sudah pernah Daftar/Login sekali (email/password atau Google) di halaman login sebelum diberi akses di sini.</p>
+                </form>
+            </div>
+
+            <div class="bg-obsidian-900 border border-obsidian-800 rounded-xl overflow-hidden p-4">
+                <h4 class="text-[10px] font-mono text-tech-blue uppercase tracking-wider mb-3 border-b border-obsidian-800 pb-1">DAFTAR AKUN TERDAFTAR</h4>
+                <div class="overflow-y-auto max-h-96"><table class="w-full text-left text-xs"><tbody id="table-akun-list" class="divide-y divide-obsidian-800"></tbody></table></div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDBeDctmH9RjChNBTvp0hsbIVwizTPxeDg",
+            authDomain: "scopex2026-d929a.firebaseapp.com",
+            databaseURL: "https://scopex2026-d929a-default-rtdb.asia-southeast1.firebasedatabase.app/",
+            projectId: "scopex2026-d929a",
+            storageBucket: "scopex2026-d929a.firebasestorage.app",
+            messagingSenderId: "271534162581",
+            appId: "1:271534162581:web:8b2f748c1974f0dbb2519c",
+            measurementId: "G-1GGNVGWBF9"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const auth = firebase.auth();
+        const googleProvider = new firebase.auth.GoogleAuthProvider();
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        let isRegisterMode = false;
+
+        if (!localStorage.getItem('scopex_deviceId')) {
+            localStorage.setItem('scopex_deviceId', 'DEV-' + Math.random().toString(36).substr(2, 9).toUpperCase());
+        }
+
+        const KATEGORI_LIST = ["Putra SD", "Putri SD", "Putra SMP", "Putri SMP"];
+        const Materi_LIST = ["Peta Lapangan", "Bank Soal", "Semaphore", "Morse", "Sandi", "B Inggris Simpul"];
+
+        const LKBB_SD_MOVES = [
+            "Berhitung", "Periksa Kerapihan (Parade)", "Hadap Kanan", "Hadap Kiri", "Setengah Lengan Lencang Kanan",
+            "Lencang Kanan", "Balik Kanan 1", "Lencang Depan", "Jalan di Tempat", "Balik Kanan 2",
+            "3 Langkah ke Kanan", "3 Langkah ke Kiri", "3 Langkah ke Depan", "4 Langkah ke Belakang",
+            "Langkah Biasa", "Langkah Tegap", "Lari Maju", "Tiap-Tiap Banjar 2x Belok Kanan", "Hormat Kanan",
+            "Ganti Langkah", "Opening Variasi", "Penggunaan PBB Murni", "Kekompakan", "Opening Formasi",
+            "Closing Formasi", "Bubar Jalan"
+        ];
+        
+        const LKBB_SMP_MOVES = [
+            "Berhitung", "Periksa Kerapihan (Parade)", "Hadap Kanan", "Hadap Kiri", "Setengah Lengan Lencang Kanan",
+            "Lencang Kanan", "Balik Kanan 1", "Lencang Depan", "Jalan di Tempat", "Balik Kanan 2",
+            "3 Langkah ke Kanan", "3 Langkah ke Kiri", "3 Langkah ke Depan", "4 Langkah ke Belakang",
+            "Langkah Biasa", "Langkah Tegap", "Lari Maju", "Tiap-Tiap Banjar 2x Belok Kanan", "Hormat Kanan",
+            "Ganti Langkah", "Melintang Kanan", "Haluan Kanan", "Opening Variasi", "Penggunaan PBB Murni",
+            "Kekompakan", "Opening Formasi", "Closing Formasi", "Bubar Jalan"
+        ];
+
+        let state = {
+            user: { role: 'guest', username: null, targetMateri: null, sessionKey: null },
+            activeMainView: "login",
+            activeLiveSdGender: "Putra SD",
+            activeLiveSmpGender: "Putra SMP",
+            activeLiveLkbbSdTab: "juri1",
+            activeLiveLkbbSmpTab: "juri1",
+            peserta: [],
+            nilai: {},
+            pesertaLkbb: [],
+            nilaiLkbb: {}, 
+            passwords: {},
+            profiles: {}, // Menyimpan data profil user
+            userRoles: {} // Menyimpan mapping akun email -> role (Firebase Auth)
+        };
+        
+        let tempAvatarBase64 = null; // Menyimpan Base64 file gambar sementara
+
+        function showModal(title, message, type = 'info', confirmCallback = null) {
+            const modal = document.getElementById('custom-modal');
+            const titleEl = document.getElementById('modal-title');
+            const messageEl = document.getElementById('modal-message');
+            const iconEl = document.getElementById('modal-icon');
+            const actionsEl = document.getElementById('modal-actions');
+            const panel = modal.querySelector('.bg-obsidian-900');
+
+            titleEl.innerText = title; messageEl.innerHTML = message; actionsEl.innerHTML = '';
+            iconEl.className = 'w-8 h-8 rounded-xl flex items-center justify-center text-md shrink-0';
+            panel.className = 'bg-obsidian-900 border relative rounded-2xl p-6 w-full max-w-md transform transition-all shadow-2xl';
+
+            if (type === 'error') { iconEl.classList.add('bg-red-950/40', 'text-red-500'); iconEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>'; panel.classList.add('border-red-600/30'); } 
+            else if (type === 'warning' || type === 'confirm') { iconEl.classList.add('bg-tech-yellowGlow', 'text-tech-yellow'); iconEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>'; panel.classList.add('border-tech-yellow/30'); } 
+            else { iconEl.classList.add('bg-tech-redGlow', 'text-tech-red'); iconEl.innerHTML = '<i class="fa-solid fa-circle-info"></i>'; panel.classList.add('border-tech-red/30'); }
+
+            if (type === 'confirm' && confirmCallback) {
+                const btnCancel = document.createElement('button');
+                btnCancel.className = 'px-4 py-2 rounded-lg font-bold uppercase bg-obsidian-800 hover:bg-obsidian-750 text-gray-400 transition-colors'; btnCancel.innerText = 'Batal'; btnCancel.onclick = closeModal;
+                const btnConfirm = document.createElement('button');
+                btnConfirm.className = 'px-4 py-2 rounded-lg font-bold uppercase bg-tech-yellow text-black hover:opacity-90 transition-opacity'; btnConfirm.innerText = 'Proses'; btnConfirm.onclick = () => { closeModal(); confirmCallback(); };
+                actionsEl.appendChild(btnCancel); actionsEl.appendChild(btnConfirm);
+            } else {
+                const btnOk = document.createElement('button');
+                btnOk.className = 'px-6 py-2 rounded-lg font-bold uppercase bg-obsidian-800 hover:bg-obsidian-750 text-white transition-colors'; btnOk.innerText = 'Mengerti'; btnOk.onclick = closeModal;
+                actionsEl.appendChild(btnOk);
+            }
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() { document.getElementById('custom-modal').classList.add('hidden'); }
+        window.alert = function(message) { showModal("System Message", message, "info"); };
+        
+        function showToast(msg, extraClass = '') {
+            const t = document.getElementById('toast'); 
+            document.getElementById('toast-msg').innerText = msg;
+            t.className = `fixed bottom-5 right-5 bg-obsidian-900 border-l-4 text-white px-5 py-3.5 rounded-lg shadow-2xl z-50 flex items-center gap-3 transition-all duration-300 transform translate-y-0 opacity-100 border-l-tech-yellow ${extraClass}`;
+            t.classList.remove('hidden');
+            setTimeout(() => { t.classList.add('opacity-0', 'translate-y-4'); setTimeout(() => t.classList.add('hidden'), 300); }, 3000);
+        }
+
+        function confirmLoadSimulasiData() { showModal("Konfirmasi Sistem", "Fungsi simulasi dimatikan di mode produksi.", "warning"); }
+        function confirmClearDatabase() { showModal("TINDAKAN CRITICAL", "Menghapus database bersifat permanen, termasuk Data LKBB. Lanjutkan?", "confirm", clearDatabase); }
+        
+        function clearDatabase() {
+            db.ref('scopex_data').set(null, (error) => {
+                if(!error) { showToast('Database telah di-reset'); state.peserta=[]; state.nilai={}; state.pesertaLkbb=[]; state.nilaiLkbb={}; state.profiles={}; }
+            });
+        }
+
+        db.ref('scopex_data').on('value', (snapshot) => {
+            const cloudData = snapshot.val() || {};
+            state.peserta = cloudData.peserta || [];
+            state.nilai = cloudData.nilai || {};
+            state.pesertaLkbb = cloudData.pesertaLkbb || [];
+            state.nilaiLkbb = cloudData.nilaiLkbb || {};
+            state.passwords = cloudData.config?.passwords || {};
+            state.profiles = cloudData.profiles || {};
+            state.userRoles = cloudData.userRoles || {};
+            
+            if (state.user.role !== 'guest') renderAuthUI(); // Update UI bila profil (avatar/name) berubah di tempat lain
+            updateAdminPesertaDropdown();
+            updateAdminPesertaLkbbDropdown();
+            renderSeparateAdminTables();
+            renderLiveReports();
+            renderLeaderboards();
+            renderLiveLkbbTables();
+            generateAutomatedNoPeserta();
+            generateAutomatedNoPesertaLkbb();
+            if (state.user.role === 'admin') renderAkunTable();
+        });
+
+        document.addEventListener("DOMContentLoaded", () => {
+            initMateriDropdownOptions();
+            initAkunMateriDropdown();
+            renderAuthUI();
+            checkGateRoute();
+            document.getElementById('score-peserta-lkbb').addEventListener('change', populateLkbbScores);
+            document.getElementById('score-juri-lkbb').addEventListener('change', () => {
+                setupLkbbInputForm();
+                populateLkbbScores();
+            });
+        });
+
+        function toggleAccordion(submenuId, iconId) {
+            const submenu = document.getElementById(submenuId); const icon = document.getElementById(iconId);
+            if (submenu.classList.contains('hidden')) { submenu.classList.remove('hidden'); icon.classList.add('rotate-180'); } 
+            else { submenu.classList.add('hidden'); icon.classList.remove('rotate-180'); }
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar'); const overlay = document.getElementById('sidebar-overlay');
+            if (sidebar.classList.contains('-translate-x-full')) { sidebar.classList.remove('-translate-x-full', 'hidden'); overlay.classList.remove('hidden'); } 
+            else { sidebar.classList.add('-translate-x-full'); if (window.innerWidth < 768) sidebar.classList.add('hidden'); overlay.classList.add('hidden'); }
+        }
+
+        function togglePasswordVisibility(inputId, iconId) {
+            const input = document.getElementById(inputId); const icon = document.getElementById(iconId);
+            if (input.type === "password") { input.type = "text"; icon.className = "fa-solid fa-eye text-xs text-tech-yellow"; } 
+            else { input.type = "password"; icon.className = "fa-solid fa-eye-slash text-xs text-gray-500"; }
+        }
+
+        function switchMainView(targetView) {
+            state.activeMainView = targetView;
+            const views = ['view-login', 'view-profil', 'view-leaderboard-sd', 'view-leaderboard-smp', 'view-live-sd', 'view-live-smp', 'view-admin-regis', 'view-admin-Nilai', 'view-admin-db', 'view-admin-akun', 'view-lkbb-sd', 'view-lkbb-smp', 'view-live-lkbb-sd', 'view-live-lkbb-smp'];
+            views.forEach(v => { const el = document.getElementById(v); if (el) { el.classList.add('hidden'); el.classList.remove('flex'); }});
+
+            const subMenuButtons = ['sub-leaderboard-sd', 'sub-leaderboard-smp', 'sub-live-sd', 'sub-live-smp', 'sub-admin-regis', 'sub-admin-Nilai', 'sub-admin-db', 'sub-admin-akun', 'sub-lkbb-sd', 'sub-lkbb-smp', 'sub-live-lkbb-sd', 'sub-live-lkbb-smp'];
+            
+            subMenuButtons.forEach(id => { 
+                const btn = document.getElementById(id); 
+                if (btn) {
+                    btn.classList.remove('active-sub-item', 'font-bold', 'text-white');
+                    btn.classList.add('text-gray-400');
+                } 
+            });
+
+            const activeBtn = document.getElementById(`sub-${targetView}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-gray-400');
+                activeBtn.classList.add('active-sub-item', 'font-bold', 'text-white');
+            }
+
+            const targetEl = document.getElementById(`view-${targetView}`);
+            if (targetEl) { targetEl.classList.remove('hidden'); targetEl.classList.add('flex'); }
+            
+            if (targetView === 'profil') loadProfilData();
+            if (targetView === 'admin-akun') { renderAkunTable(); handleAkunRoleChange(); }
+            
+            if (window.innerWidth < 768 && targetView !== 'login') toggleSidebar();
+        }
+
+        function switchRegisTab(tab) {
+            const tMateri = document.getElementById('tab-regis-materi');
+            const tLkbb = document.getElementById('tab-regis-lkbb');
+            
+            if (tab === 'materi') {
+                tMateri.classList.remove('text-gray-400', 'hover:text-white'); 
+                tMateri.classList.add('bg-tech-red', 'text-white');
+                
+                tLkbb.classList.remove('bg-tech-blue', 'text-white'); 
+                tLkbb.classList.add('text-gray-400', 'hover:text-white');
+                
+                document.getElementById('wrapper-regis-materi').classList.remove('hidden'); 
+                document.getElementById('wrapper-regis-lkbb').classList.add('hidden');
+            } else {
+                tLkbb.classList.remove('text-gray-400', 'hover:text-white'); 
+                tLkbb.classList.add('bg-tech-blue', 'text-white');
+                
+                tMateri.classList.remove('bg-tech-red', 'text-white'); 
+                tMateri.classList.add('text-gray-400', 'hover:text-white');
+                
+                document.getElementById('wrapper-regis-lkbb').classList.remove('hidden'); 
+                document.getElementById('wrapper-regis-materi').classList.add('hidden');
+                generateAutomatedNoPesertaLkbb();
+            }
+        }
+
+        function switchNilaiTab(tab) {
+            const tMateri = document.getElementById('tab-nilai-materi');
+            const tLkbb = document.getElementById('tab-nilai-lkbb');
+            
+            if (tab === 'materi') {
+                tMateri.classList.remove('text-gray-400', 'hover:text-white'); 
+                tMateri.classList.add('bg-tech-yellow', 'text-black');
+                
+                tLkbb.classList.remove('bg-tech-blue', 'text-white'); 
+                tLkbb.classList.add('text-gray-400', 'hover:text-white');
+                
+                document.getElementById('wrapper-nilai-materi').classList.remove('hidden'); 
+                document.getElementById('wrapper-nilai-lkbb').classList.add('hidden');
+            } else {
+                tLkbb.classList.remove('text-gray-400', 'hover:text-white'); 
+                tLkbb.classList.add('bg-tech-blue', 'text-white');
+                
+                tMateri.classList.remove('bg-tech-yellow', 'text-black'); 
+                tMateri.classList.add('text-gray-400', 'hover:text-white');
+                
+                document.getElementById('wrapper-nilai-lkbb').classList.remove('hidden'); 
+                document.getElementById('wrapper-nilai-materi').classList.add('hidden');
+                updateAdminPesertaLkbbDropdown(); setupLkbbInputForm();
+            }
+        }
+
+        function checkGateRoute() {
+            const menuZone = document.getElementById('main-menu-zone'), fallbackText = document.getElementById('sidebar-fallback-text'), adminMenuContainer = document.getElementById('admin-menu-container'), sidebar = document.getElementById('sidebar'), mobileHeader = document.getElementById('mobile-header');
+            
+            const views = ['view-login', 'view-profil', 'view-leaderboard-sd', 'view-leaderboard-smp', 'view-live-sd', 'view-live-smp', 'view-admin-regis', 'view-admin-Nilai', 'view-admin-db', 'view-admin-akun', 'view-lkbb-sd', 'view-lkbb-smp', 'view-live-lkbb-sd', 'view-live-lkbb-smp'];
+            views.forEach(v => { const el = document.getElementById(v); if(el) { el.classList.add('hidden'); el.classList.remove('flex'); } });
+
+            menuZone.classList.add('hidden'); fallbackText.classList.remove('hidden'); adminMenuContainer.classList.add('hidden');
+
+            if (state.user.role === 'guest') {
+                document.getElementById('view-login').classList.remove('hidden'); document.getElementById('view-login').classList.add('flex');
+                sidebar.classList.add('hidden'); sidebar.classList.remove('md:flex');
+                mobileHeader.classList.add('hidden'); mobileHeader.classList.remove('flex');
+                return; 
+            }
+
+            if (window.innerWidth >= 768) { sidebar.classList.remove('hidden', '-translate-x-full'); sidebar.classList.add('md:flex'); mobileHeader.classList.add('hidden'); mobileHeader.classList.remove('flex'); } 
+            else { sidebar.classList.add('hidden'); mobileHeader.classList.remove('hidden'); mobileHeader.classList.add('flex'); }
+
+            menuZone.classList.remove('hidden'); fallbackText.classList.add('hidden');
+            
+            const menuGroupPeringkatMateri = document.getElementById('menu-group-peringkat-materi');
+            const menuGroupPeringkatLKBB = document.getElementById('menu-group-peringkat-lkbb');
+            const menuGroupLiveMateri = document.getElementById('menu-group-live-materi');
+            const menuGroupLiveLKBB = document.getElementById('menu-group-live-lkbb');
+            
+            if(menuGroupPeringkatMateri) menuGroupPeringkatMateri.classList.remove('hidden');
+            if(menuGroupPeringkatLKBB) menuGroupPeringkatLKBB.classList.remove('hidden');
+            if(menuGroupLiveMateri) menuGroupLiveMateri.classList.remove('hidden');
+            if(menuGroupLiveLKBB) menuGroupLiveLKBB.classList.remove('hidden');
+
+            if (state.user.role === 'peserta-materi') {
+                if(menuGroupPeringkatLKBB) menuGroupPeringkatLKBB.classList.add('hidden');
+                if(menuGroupLiveLKBB) menuGroupLiveLKBB.classList.add('hidden');
+                
+                toggleAccordion('submenu-Peringkat', 'icon-Peringkat'); toggleAccordion('submenu-live', 'icon-live');
+                if (state.activeMainView === 'login') switchMainView('leaderboard-sd'); else switchMainView(state.activeMainView);
+                return;
+            } else if (state.user.role === 'peserta-lkbb') {
+                if(menuGroupPeringkatMateri) menuGroupPeringkatMateri.classList.add('hidden');
+                if(menuGroupLiveMateri) menuGroupLiveMateri.classList.add('hidden');
+                
+                toggleAccordion('submenu-lkbb', 'icon-lkbb'); toggleAccordion('submenu-live-lkbb', 'icon-live-lkbb');
+                if (state.activeMainView === 'login') switchMainView('lkbb-sd'); else switchMainView(state.activeMainView);
+                return;
+            }
+
+            toggleAccordion('submenu-Peringkat', 'icon-Peringkat'); toggleAccordion('submenu-live', 'icon-live'); toggleAccordion('submenu-lkbb', 'icon-lkbb'); toggleAccordion('submenu-live-lkbb', 'icon-live-lkbb');
+
+            if (state.user.role === 'admin' || state.user.role === 'sub-admin' || state.user.role === 'sub-admin-lkbb') {
+                adminMenuContainer.classList.remove('hidden'); toggleAccordion('submenu-admin', 'icon-admin');
+                const adminOnlyElements = document.querySelectorAll('.id-admin-only');
+                const tabMateri = document.getElementById('tab-nilai-materi'), tabLkbb = document.getElementById('tab-nilai-lkbb');
+                
+                if (state.user.role === 'sub-admin') {
+                    // Sembunyikan Database dan Regis Peserta
+                    adminOnlyElements.forEach(el => el.classList.add('hidden'));
+                    document.getElementById('score-desc').innerText = `> Mengisi data telemetri khusus bidang ${state.user.targetMateri}`;
+                    document.getElementById('score-Materi').value = state.user.targetMateri; document.getElementById('score-Materi').disabled = true;
+                    
+                    if(tabLkbb) tabLkbb.classList.add('hidden'); 
+                    if(tabMateri) tabMateri.classList.remove('hidden');
+                    switchNilaiTab('materi');
+                } else if (state.user.role === 'sub-admin-lkbb') {
+                    // Sembunyikan Database dan Regis Peserta
+                    adminOnlyElements.forEach(el => el.classList.add('hidden'));
+                    document.getElementById('score-desc').innerText = `> JURI LKBB: Input Nilai Gerakan`;
+                    
+                    if(tabMateri) tabMateri.classList.add('hidden');
+                    if(tabLkbb) tabLkbb.classList.remove('hidden');
+                    
+                    document.getElementById('score-kategori-lkbb').value = state.user.targetLkbb; document.getElementById('score-kategori-lkbb').disabled = true;
+                    document.getElementById('score-juri-lkbb').value = state.user.juriId; document.getElementById('score-juri-lkbb').disabled = true;
+                    
+                    switchNilaiTab('lkbb'); 
+                    setTimeout(() => { setupLkbbInputForm(); updateAdminPesertaLkbbDropdown(); }, 50);
+                } else {
+                    adminOnlyElements.forEach(el => el.classList.remove('hidden'));
+                    document.getElementById('score-Materi').disabled = false;
+                    document.getElementById('score-kategori-lkbb').disabled = false; document.getElementById('score-juri-lkbb').disabled = false;
+                    if(tabLkbb) tabLkbb.classList.remove('hidden'); if(tabMateri) tabMateri.classList.remove('hidden');
+                }
+
+                if (state.activeMainView === 'login') switchMainView((state.user.role === 'sub-admin' || state.user.role === 'sub-admin-lkbb') ? 'admin-Nilai' : 'admin-db');
+                else switchMainView(state.activeMainView);
+                return;
+            }
+        }
+
+        function renderAuthUI() {
+            const nav = document.getElementById('auth-nav-zone');
+            if (state.user.role === 'guest') { 
+                nav.innerHTML = `<div class="text-center text-red-500 font-mono text-[9px] uppercase tracking-widest"><i class="fa-solid fa-lock mr-1"></i> Sys. Locked</div>`; 
+            } else {
+                let roleColor = state.user.role === 'admin' ? 'text-tech-red' : (state.user.role.includes('sub-admin') ? 'text-tech-yellow' : 'text-gray-400');
+                
+                // Cek jika ada custom avatar dari data profil
+                let customAvatar = state.profiles[state.user.sessionKey]?.avatar || null;
+                let displayName = state.user.username;
+                
+                nav.innerHTML = `
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-2.5 min-w-0 cursor-pointer hover:bg-obsidian-800 p-1.5 -ml-1.5 rounded-lg transition-colors group" onclick="switchMainView('profil')">
+                            <div class="w-8 h-8 rounded-lg bg-obsidian-800 border border-obsidian-700 flex items-center justify-center shrink-0 overflow-hidden relative">
+                                ${customAvatar ? `<img src="${customAvatar}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-user-astronaut text-xs text-gray-500"></i>`}
+                                <div class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <i class="fa-solid fa-gear text-[10px] text-white"></i>
+                                </div>
+                            </div>
+                            <div class="flex flex-col min-w-0">
+                                <span class="text-[8px] font-mono ${roleColor} uppercase tracking-widest truncate">Auth: ${state.user.role}</span>
+                                <span class="text-xs font-bold text-white truncate">${displayName}</span>
+                            </div>
+                        </div>
+                        <button onclick="handleLogout()" class="w-7 h-7 rounded-lg bg-red-950/20 hover:bg-red-950/40 text-red-500 transition-colors flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-power-off text-[10px]"></i>
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // ================= PROFILE LOGIC =================
+        function handleAvatarUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (file.size > 1024 * 1024) { showToast('Ukuran file maksimal 1MB', 'border-l-tech-red'); return; }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                tempAvatarBase64 = e.target.result;
+                document.getElementById('profil-preview-avatar').src = tempAvatarBase64;
+                document.getElementById('profil-preview-avatar').classList.remove('hidden');
+                document.getElementById('profil-icon-avatar').classList.add('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function loadProfilData() {
+            if (state.user.role === 'guest') return;
+            const profile = state.profiles[state.user.sessionKey] || {};
+            
+            document.getElementById('profil-username').value = profile.username || state.user.username || '';
+            document.getElementById('profil-email').value = (auth.currentUser && auth.currentUser.email) || state.user.email || '';
+            document.getElementById('profil-password').value = '';
+
+            const hasPasswordProvider = auth.currentUser && auth.currentUser.providerData.some(p => p.providerId === 'password');
+            const pwWrap = document.getElementById('profil-password-wrap');
+            const pwInput = document.getElementById('profil-password');
+            const pwHint = document.getElementById('profil-password-hint');
+            if (hasPasswordProvider) {
+                pwWrap.classList.remove('opacity-50'); pwInput.disabled = false;
+                pwHint.innerText = '> Minimal 6 karakter. Kosongkan jika tidak ingin mengubah password.';
+            } else {
+                pwWrap.classList.add('opacity-50'); pwInput.disabled = true;
+                pwHint.innerText = '> Akun ini masuk via Google, password dikelola oleh Google.';
+            }
+            
+            document.getElementById('profil-role-badge').innerText = `ROLE: ${state.user.role.replace('-', ' ')}`;
+            
+            tempAvatarBase64 = profile.avatar || null;
+            if (tempAvatarBase64) {
+                document.getElementById('profil-preview-avatar').src = tempAvatarBase64;
+                document.getElementById('profil-preview-avatar').classList.remove('hidden');
+                document.getElementById('profil-icon-avatar').classList.add('hidden');
+            } else {
+                document.getElementById('profil-preview-avatar').classList.add('hidden');
+                document.getElementById('profil-icon-avatar').classList.remove('hidden');
+            }
+        }
+
+        document.getElementById('form-profil').onsubmit = function(e) {
+            e.preventDefault();
+            const newUsername = document.getElementById('profil-username').value.trim();
+            const newPassword = document.getElementById('profil-password').value.trim();
+            const currentEmail = (auth.currentUser && auth.currentUser.email) || state.user.email || '';
+
+            const profileData = {
+                username: newUsername,
+                email: currentEmail,
+                avatar: tempAvatarBase64
+            };
+
+            const savePasswordIfNeeded = () => {
+                if (!newPassword) return Promise.resolve();
+                if (newPassword.length < 6) { showModal('Error', 'Password baru minimal 6 karakter.', 'error'); return Promise.reject('short-password'); }
+                return auth.currentUser.updatePassword(newPassword);
+            };
+
+            savePasswordIfNeeded().then(() => {
+                db.ref(`scopex_data/profiles/${state.user.sessionKey}`).update(profileData, (error) => {
+                    if(error) { showModal('Error', 'Gagal menyimpan profil.', 'error'); return; }
+                    showToast('Profil berhasil diperbarui.', 'border-l-tech-yellow');
+                    state.user.username = newUsername; // Update sesi saat ini
+                    document.getElementById('profil-password').value = '';
+                    renderAuthUI();
+                });
+            }).catch(err => {
+                if (err === 'short-password') return;
+                if (err && err.code === 'auth/requires-recent-login') {
+                    showModal('Perlu Login Ulang', 'Untuk keamanan, silakan logout lalu login kembali sebelum mengubah password.', 'warning');
+                } else if (err) {
+                    showModal('Error', 'Gagal mengubah password: ' + (err.message || err), 'error');
+                }
+            });
+        };
+        // =================================================
+
+        // ================= FIREBASE AUTH: LOGIN / DAFTAR (EMAIL & PASSWORD) =================
+        function sanitizeEmailKey(email) {
+            // Key Realtime Database tidak boleh mengandung . # $ [ ]
+            return email.trim().toLowerCase().replace(/[.#$\[\]]/g, ',');
+        }
+
+        function toggleLoginMode() {
+            isRegisterMode = !isRegisterMode;
+            document.getElementById('login-error').classList.add('hidden');
+            document.getElementById('login-confirm-wrap').classList.toggle('hidden', !isRegisterMode);
+            document.getElementById('login-submit-btn').innerHTML = isRegisterMode
+                ? 'DAFTAR <i class="fa-solid fa-user-plus ml-1"></i>'
+                : 'LOGIN <i class="fa-solid fa-arrow-right-to-bracket ml-1"></i>';
+            document.getElementById('login-toggle-text').innerText = isRegisterMode ? 'Sudah punya akun?' : 'Belum punya akun?';
+            document.getElementById('login-toggle-btn').innerText = isRegisterMode ? 'Masuk di sini' : 'Daftar di sini';
+        }
+
+        function showLoginError(message) {
+            const err = document.getElementById('login-error');
+            document.getElementById('login-error-text').innerText = message;
+            err.classList.remove('hidden');
+        }
+
+        function mapAuthErrorMessage(error) {
+            const map = {
+                'auth/invalid-email': 'Format email tidak valid.',
+                'auth/user-not-found': 'Akun tidak ditemukan. Silakan daftar dahulu.',
+                'auth/wrong-password': 'Password salah.',
+                'auth/invalid-credential': 'Email atau password salah.',
+                'auth/email-already-in-use': 'Email ini sudah terdaftar. Silakan login.',
+                'auth/weak-password': 'Password minimal 6 karakter.',
+                'auth/too-many-requests': 'Terlalu banyak percobaan. Coba lagi nanti.',
+                'auth/popup-closed-by-user': 'Popup Google ditutup sebelum selesai.'
+            };
+            return map[error.code] || (error.message || 'Autentikasi gagal.');
+        }
+
+        document.getElementById('form-login').onsubmit = function(e) {
+            e.preventDefault();
+            document.getElementById('login-error').classList.add('hidden');
+            const email = document.getElementById('login-email').value.trim();
+            const pass = document.getElementById('login-password').value;
+            const submitBtn = document.getElementById('login-submit-btn');
+            submitBtn.disabled = true;
+
+            if (isRegisterMode) {
+                const confirmPass = document.getElementById('login-password-confirm').value;
+                if (pass !== confirmPass) { showLoginError('Konfirmasi password tidak cocok.'); submitBtn.disabled = false; return; }
+                auth.createUserWithEmailAndPassword(email, pass)
+                    .then(() => { showToast('Akun berhasil dibuat. Menunggu aktivasi Admin.', 'border-l-tech-blue'); })
+                    .catch(err => showLoginError(mapAuthErrorMessage(err)))
+                    .finally(() => submitBtn.disabled = false);
+            } else {
+                auth.signInWithEmailAndPassword(email, pass)
+                    .catch(err => showLoginError(mapAuthErrorMessage(err)))
+                    .finally(() => submitBtn.disabled = false);
+            }
+        };
+
+        function handleGoogleLogin() {
+            document.getElementById('login-error').classList.add('hidden');
+            auth.signInWithPopup(googleProvider)
+                .catch(err => showLoginError(mapAuthErrorMessage(err)));
+        }
+
+        // Dipanggil setiap status login Firebase Auth berubah (login, daftar, refresh halaman, logout)
+        auth.onAuthStateChanged((fbUser) => {
+            if (!fbUser) {
+                state.user = { role: 'guest', username: null, targetMateri: null, sessionKey: null };
+                state.activeMainView = 'login';
+                renderAuthUI(); checkGateRoute();
+                return;
+            }
+
+            const emailKey = sanitizeEmailKey(fbUser.email);
+            db.ref(`scopex_data/userRoles/${emailKey}`).once('value').then(snap => {
+                const mapping = snap.val();
+                if (!mapping || !mapping.role) {
+                    showModal('Akses Belum Aktif', `Akun <b>${fbUser.email}</b> berhasil masuk, namun belum diberi akses oleh Admin. Silakan hubungi Admin SCOPEX VOL-II untuk aktivasi akun.`, 'warning');
+                    auth.signOut();
+                    return;
+                }
+
+                state.user = {
+                    role: mapping.role,
+                    username: mapping.username || fbUser.displayName || fbUser.email,
+                    targetMateri: mapping.targetMateri || null,
+                    sessionKey: mapping.sessionKey,
+                    juriId: mapping.juriId || null,
+                    targetLkbb: mapping.targetLkbb || null,
+                    email: fbUser.email
+                };
+                renderAuthUI(); showToast(`Sesi dimulai. Selamat datang ${state.user.username}`); checkGateRoute();
+            }).catch(() => {
+                showModal('Error', 'Gagal memuat data akses akun. Coba lagi.', 'error');
+                auth.signOut();
+            });
+        });
+
+        function handleLogout() {
+            auth.signOut();
+            showToast("Sesi berakhir. Sistem dikunci.", "border-l-tech-red");
+        }
+        // =================================================
+
+        // ================= ADMIN: KELOLA AKUN LOGIN (MAPPING EMAIL -> ROLE) =================
+        function initAkunMateriDropdown() {
+            const select = document.getElementById('akun-materi'); if (!select) return; select.innerHTML = "";
+            Materi_LIST.forEach(l => { select.innerHTML += `<option value="${l}" class="bg-obsidian-900">${l}</option>`; });
+        }
+
+        function updateAkunPesertaMateriDropdown() {
+            const select = document.getElementById('akun-peserta-materi'); if (!select) return;
+            if (state.peserta.length === 0) { select.innerHTML = `<option value="" class="bg-obsidian-900">-- Belum ada regu terdaftar --</option>`; return; }
+            select.innerHTML = state.peserta.map(p => `<option value="${p.noPeserta}" class="bg-obsidian-900">[${p.noPeserta}] ${p.nama}</option>`).join('');
+        }
+
+        function updateAkunPesertaLkbbDropdown() {
+            const select = document.getElementById('akun-peserta-lkbb'); if (!select) return;
+            if (state.pesertaLkbb.length === 0) { select.innerHTML = `<option value="" class="bg-obsidian-900">-- Belum ada pasukan terdaftar --</option>`; return; }
+            select.innerHTML = state.pesertaLkbb.map(p => `<option value="${p.noPeserta}" class="bg-obsidian-900">[${p.noPeserta}] ${p.pangkalan}</option>`).join('');
+        }
+
+        function handleAkunRoleChange() {
+            const role = document.getElementById('akun-role').value;
+            document.getElementById('wrapper-akun-materi').classList.toggle('hidden', role !== 'sub-admin');
+            document.getElementById('wrapper-akun-lkbb').classList.toggle('hidden', role !== 'sub-admin-lkbb');
+            document.getElementById('wrapper-akun-peserta-materi').classList.toggle('hidden', role !== 'peserta-materi');
+            document.getElementById('wrapper-akun-peserta-lkbb').classList.toggle('hidden', role !== 'peserta-lkbb');
+            if (role === 'peserta-materi') updateAkunPesertaMateriDropdown();
+            if (role === 'peserta-lkbb') updateAkunPesertaLkbbDropdown();
+        }
+
+        document.getElementById('form-tambah-akun').onsubmit = function(e) {
+            e.preventDefault();
+            const email = document.getElementById('akun-email').value.trim().toLowerCase();
+            const namaTampilan = document.getElementById('akun-nama').value.trim();
+            const role = document.getElementById('akun-role').value;
+
+            let sessionKey = "", username = namaTampilan, targetMateri = null, juriId = null, targetLkbb = null;
+
+            if (role === 'admin') {
+                sessionKey = 'super_admin';
+                username = username || 'Core Admin';
+            } else if (role === 'sub-admin') {
+                const materi = document.getElementById('akun-materi').value;
+                const firebaseKey = materi.replace(/\./g, '_').replace(/\s+/g, '_');
+                sessionKey = 'juri_' + firebaseKey;
+                targetMateri = materi;
+                username = username || `Juri ${materi}`;
+            } else if (role === 'sub-admin-lkbb') {
+                const tier = document.getElementById('akun-lkbb-tier').value;
+                const juriRaw = document.getElementById('akun-lkbb-juri').value;
+                sessionKey = juriRaw === 'vapor' ? `vapor_lkbb_${tier.toLowerCase()}` : `juri${juriRaw}_lkbb_${tier.toLowerCase()}`;
+                juriId = juriRaw === 'vapor' ? 'vapor' : `juri${juriRaw}`;
+                targetLkbb = tier;
+                username = username || `JURI ${juriRaw.toUpperCase()} LKBB ${tier}`;
+            } else if (role === 'peserta-materi') {
+                const noPeserta = document.getElementById('akun-peserta-materi').value;
+                if (!noPeserta) { showModal('Error', 'Belum ada regu materi untuk dipilih.', 'error'); return; }
+                const p = state.peserta.find(x => x.noPeserta === noPeserta);
+                sessionKey = 'peserta_' + noPeserta;
+                username = username || (p ? p.nama : noPeserta);
+            } else if (role === 'peserta-lkbb') {
+                const noPeserta = document.getElementById('akun-peserta-lkbb').value;
+                if (!noPeserta) { showModal('Error', 'Belum ada pasukan LKBB untuk dipilih.', 'error'); return; }
+                const p = state.pesertaLkbb.find(x => x.noPeserta === noPeserta);
+                sessionKey = 'peserta_lkbb_' + noPeserta;
+                username = username || (p ? p.pangkalan : noPeserta);
+            }
+
+            const emailKey = sanitizeEmailKey(email);
+            const payload = { email, role, sessionKey, username, targetMateri, juriId, targetLkbb };
+
+            db.ref(`scopex_data/userRoles/${emailKey}`).set(payload, (error) => {
+                if (error) { showModal('Error', 'Gagal menyimpan akses akun.', 'error'); return; }
+                showToast(`Akses untuk ${email} berhasil disimpan`, 'border-l-tech-blue');
+                document.getElementById('akun-email').value = ''; document.getElementById('akun-nama').value = '';
+            });
+        };
+
+        function renderAkunTable() {
+            const tbody = document.getElementById('table-akun-list'); if (!tbody) return;
+            const entries = Object.entries(state.userRoles || {});
+            if (entries.length === 0) { tbody.innerHTML = `<tr><td class="p-3 text-center font-mono text-[9px] text-gray-600 uppercase">Belum ada akun diberi akses</td></tr>`; return; }
+
+            const roleLabel = { 'admin': 'Admin', 'sub-admin': 'Juri Materi', 'sub-admin-lkbb': 'Juri LKBB', 'peserta-materi': 'Peserta Materi', 'peserta-lkbb': 'Peserta LKBB' };
+            tbody.innerHTML = entries.map(([key, m]) => `
+                <tr class="hover:bg-white/[0.02]">
+                    <td class="p-2">
+                        <div class="font-bold text-white text-[11px]">${m.username || '-'}</div>
+                        <div class="text-[9px] font-mono text-gray-500">${m.email || ''}</div>
+                    </td>
+                    <td class="p-2 text-[10px] font-mono text-tech-blue uppercase">${roleLabel[m.role] || m.role}</td>
+                    <td class="p-2 text-right">
+                        <button onclick="hapusAkun('${key}')" class="text-red-500 hover:text-red-400 px-2 py-1"><i class="fa-solid fa-trash text-xs"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function hapusAkun(emailKey) {
+            showModal('Konfirmasi Hapus', 'Hapus akses login untuk akun ini? Akun Firebase pengguna tidak ikut terhapus, hanya haknya di sistem.', 'confirm', () => {
+                db.ref(`scopex_data/userRoles/${emailKey}`).remove((error) => {
+                    if (!error) showToast('Akses akun dihapus', 'border-l-tech-red');
+                });
+            });
+        }
+        // =================================================
+
+        function getLkbbScoreByJuri(noPeserta, juriId) {
+            let total = 0; const data = state.nilaiLkbb[noPeserta];
+            if (!data || !data[juriId]) return 0;
+            Object.values(data[juriId]).forEach(v => total += parseFloat(v || 0));
+            return total;
+        }
+
+        function calculateLkbbScore(noPeserta) {
+            return getLkbbScoreByJuri(noPeserta, 'juri1') + getLkbbScoreByJuri(noPeserta, 'juri2') + getLkbbScoreByJuri(noPeserta, 'vapor');
+        }
+
+        function renderLeaderboards() {
+            renderLeaderboardForTier('SD', 'leaderboard-sd-body'); renderLeaderboardForTier('SMP', 'leaderboard-smp-body');
+            renderLeaderboardLkbb('SD', 'leaderboard-lkbb-sd-body'); renderLeaderboardLkbb('SMP', 'leaderboard-lkbb-smp-body');
+        }
+
+        function renderLeaderboardForTier(tier, targetBodyId) {
+            const body = document.getElementById(targetBodyId); if (!body) return;
+            let rekapList = [];
+            state.peserta.forEach(p => {
+                const isSD = p.kategori.includes("SD");
+                if ((tier === 'SD' && isSD) || (tier === 'SMP' && !isSD)) {
+                    let totalPoin = 0; Materi_LIST.forEach(m => { if (state.nilai[p.noPeserta] && state.nilai[p.noPeserta][m] !== undefined) totalPoin += state.nilai[p.noPeserta][m]; });
+                    rekapList.push({ ...p, total: totalPoin });
+                }
+            });
+            rekapList.sort((a, b) => b.total - a.total); body.innerHTML = "";
+            if (rekapList.length === 0) { body.innerHTML = `<tr><td colspan="4" class="py-6 px-5 text-center text-gray-600 font-mono text-[11px] italic uppercase tracking-wider">Awaiting telemetry streams...</td></tr>`; return; }
+
+            rekapList.forEach((r, index) => {
+                let rankVisual = `<span class="font-mono text-gray-500 font-bold text-xs">${String(index + 1).padStart(2, '0')}</span>`;
+                let rowClass = "hover:bg-white/[0.01] transition-all"; let highlightClass = "text-tech-yellow";
+                if (index === 0) { rankVisual = `<div class="w-6 h-6 rounded bg-tech-yellow/10 flex items-center justify-center text-tech-yellow font-bold text-xs mx-auto"><i class="fa-solid fa-crown"></i></div>`; rowClass = "bg-tech-yellow/[0.02] border-l-2 border-l-tech-yellow"; } 
+                else if (index === 1) { rankVisual = `<div class="w-6 h-6 rounded bg-gray-500/10 flex items-center justify-center text-gray-300 font-bold text-xs mx-auto">02</div>`; highlightClass = "text-gray-300"; } 
+                else if (index === 2) { rankVisual = `<div class="w-6 h-6 rounded bg-red-500/10 flex items-center justify-center text-tech-red font-bold text-xs mx-auto">03</div>`; highlightClass = "text-tech-red"; }
+                
+                const isOwned = (state.user.role === 'peserta-materi' && state.user.sessionKey === ('peserta_' + r.noPeserta));
+                if (isOwned) rowClass = "bg-tech-yellow/10 border-l-2 border-l-tech-yellow";
+
+                body.innerHTML += `
+                    <tr class="${rowClass}">
+                        <td class="py-3.5 px-5 text-center align-middle">${rankVisual}</td>
+                        <td class="py-3.5 px-5"><div class="font-bold text-white tracking-wide ${isOwned ? 'text-tech-yellow' : ''}">${r.nama}</div><div class="text-[9px] font-mono text-gray-600 uppercase mt-0.5">ID: ${r.noPeserta} | ${r.kategori}</div></td>
+                        <td class="py-3.5 px-5 text-gray-400 text-xs">${r.pangkalan}</td>
+                        <td class="py-3.5 px-5 text-right font-mono font-bold text-sm ${highlightClass}">${r.total.toFixed(1)} <span class="text-[9px] text-gray-500 font-normal uppercase">pts</span></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderLeaderboardLkbb(tier, targetBodyId) {
+            const body = document.getElementById(targetBodyId); if (!body) return;
+            let rekapList = [];
+            state.pesertaLkbb.forEach(p => {
+                if (p.kategori === tier) {
+                    let totalPoin = calculateLkbbScore(p.noPeserta);
+                    rekapList.push({ ...p, total: totalPoin });
+                }
+            });
+            rekapList.sort((a, b) => b.total - a.total); body.innerHTML = "";
+            if (rekapList.length === 0) { body.innerHTML = `<tr><td colspan="3" class="py-6 px-5 text-center text-gray-600 font-mono text-[11px] italic uppercase tracking-wider">Awaiting LKBB telemetry streams...</td></tr>`; return; }
+
+            rekapList.forEach((r, index) => {
+                let rankVisual = `<span class="font-mono text-gray-500 font-bold text-xs">${String(index + 1).padStart(2, '0')}</span>`;
+                let rowClass = "hover:bg-white/[0.01] transition-all"; let highlightClass = "text-tech-blue";
+                if (index === 0) { rankVisual = `<div class="w-6 h-6 rounded bg-tech-blue/10 flex items-center justify-center text-tech-blue font-bold text-xs mx-auto"><i class="fa-solid fa-crown"></i></div>`; rowClass = "bg-tech-blue/[0.02] border-l-2 border-l-tech-blue"; } 
+                else if (index === 1) { rankVisual = `<div class="w-6 h-6 rounded bg-gray-500/10 flex items-center justify-center text-gray-300 font-bold text-xs mx-auto">02</div>`; highlightClass = "text-gray-300"; } 
+                else if (index === 2) { rankVisual = `<div class="w-6 h-6 rounded bg-purple-500/10 flex items-center justify-center text-purple-400 font-bold text-xs mx-auto">03</div>`; highlightClass = "text-purple-400"; }
+                
+                const isOwned = (state.user.role === 'peserta-lkbb' && state.user.sessionKey === ('peserta_lkbb_' + r.noPeserta));
+                if (isOwned) rowClass = "bg-tech-blue/10 border-l-2 border-l-tech-blue";
+
+                body.innerHTML += `
+                    <tr class="${rowClass}">
+                        <td class="py-3.5 px-5 text-center align-middle">${rankVisual}</td>
+                        <td class="py-3.5 px-5"><div class="font-bold text-white tracking-wide ${isOwned ? 'text-tech-blue' : ''}">${r.pangkalan}</div><div class="text-[9px] font-mono text-gray-600 uppercase mt-0.5">ID LKBB: ${r.noPeserta}</div></td>
+                        <td class="py-3.5 px-5 text-right font-mono font-bold text-sm ${highlightClass}">${r.total} <span class="text-[9px] text-gray-500 font-normal uppercase">pts</span></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function switchLiveLkbbTab(tier, juriId) {
+            const tabs = ['juri1', 'juri2', 'vapor'];
+            if(tier === 'SD') {
+                state.activeLiveLkbbSdTab = juriId;
+                tabs.forEach(t => {
+                    const btn = document.getElementById(`tab-live-lkbb-sd-${t}`);
+                    if(btn) btn.className = (t === juriId) ? "px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-tech-blue text-white" : "px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider text-gray-400 hover:text-white";
+                });
+            } else {
+                state.activeLiveLkbbSmpTab = juriId;
+                tabs.forEach(t => {
+                    const btn = document.getElementById(`tab-live-lkbb-smp-${t}`);
+                    if(btn) btn.className = (t === juriId) ? "px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-purple-500 text-white" : "px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider text-gray-400 hover:text-white";
+                });
+            }
+            renderLiveLkbbTables();
+        }
+
+        function renderLiveLkbbTables() {
+            const tiers = [{t: 'SD', j: state.activeLiveLkbbSdTab, body: 'live-lkbb-sd-body'}, {t: 'SMP', j: state.activeLiveLkbbSmpTab, body: 'live-lkbb-smp-body'}];
+            
+            tiers.forEach(config => {
+                const body = document.getElementById(config.body); if(!body) return;
+                let rekapList = [];
+                state.pesertaLkbb.forEach(p => {
+                    if (p.kategori === config.t) {
+                        let totalPoin = getLkbbScoreByJuri(p.noPeserta, config.j);
+                        rekapList.push({ ...p, total: totalPoin });
+                    }
+                });
+                rekapList.sort((a, b) => b.total - a.total); body.innerHTML = "";
+                if (rekapList.length === 0) { body.innerHTML = `<tr><td colspan="3" class="py-6 px-5 text-center text-gray-600 font-mono text-[11px] italic uppercase tracking-wider">Tidak ada data untuk Juri ini...</td></tr>`; return; }
+
+                rekapList.forEach((r, index) => {
+                    let hl = config.j === 'juri1' ? (config.t === 'SD' ? 'text-tech-blue' : 'text-purple-400') : (config.j === 'vapor' ? 'text-tech-yellow' : 'text-gray-300');
+                    body.innerHTML += `
+                        <tr class="hover:bg-white/[0.02]">
+                            <td class="py-3 px-5 text-center align-middle font-mono text-gray-500 text-xs">${index+1}</td>
+                            <td class="py-3 px-5"><div class="font-bold text-white tracking-wide">${r.pangkalan}</div><div class="text-[9px] font-mono text-gray-600 uppercase mt-0.5">ID LKBB: ${r.noPeserta}</div></td>
+                            <td class="py-3 px-5 text-right font-mono font-bold text-sm ${hl}">${r.total}</td>
+                        </tr>
+                    `;
+                });
+            });
+        }
+
+        function switchLiveSubGender(category) {
+            if (category.includes("SD")) {
+                state.activeLiveSdGender = category; const isPutra = category === "Putra SD";
+                document.getElementById('btn-gender-pasd').className = isPutra ? "px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-tech-red text-white" : "px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider text-gray-400 hover:text-white";
+                document.getElementById('btn-gender-pisd').className = !isPutra ? "px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-tech-red text-white" : "px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider text-gray-400 hover:text-white";
+            } else {
+                state.activeLiveSmpGender = category; const isPutra = category === "Putra SMP";
+                document.getElementById('btn-gender-pasmp').className = isPutra ? "px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-tech-yellow text-black" : "px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider text-gray-400 hover:text-white";
+                document.getElementById('btn-gender-pismp').className = !isPutra ? "px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-tech-yellow text-black" : "px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider text-gray-400 hover:text-white";
+            }
+            renderLiveReports();
+        }
+
+        function renderLiveGridForTier(tier, activeGenderCategory, gridId) {
+            const grid = document.getElementById(gridId); if (!grid) return; grid.innerHTML = "";
+            Materi_LIST.forEach(Materi => {
+                let NilaiList = [];
+                state.peserta.filter(p => p.kategori === activeGenderCategory).forEach(p => {
+                    const n = (state.nilai[p.noPeserta] && state.nilai[p.noPeserta][Materi] !== undefined) ? state.nilai[p.noPeserta][Materi] : null;
+                    if (n !== null) NilaiList.push({ nama: p.nama, pangkalan: p.pangkalan, Nilai: n, noPeserta: p.noPeserta });
+                });
+                NilaiList.sort((a, b) => b.Nilai - a.Nilai);
+                let top6WithTies = []; const PANGKAT_LABELS = ["Rank 1", "Rank 2", "Rank 3", "Honor 1", "Honor 2", "Honor 3"]; let currentRankIndex = 0; 
+                for (let i = 0; i < NilaiList.length; i++) {
+                    if (i > 0 && NilaiList[i].Nilai === NilaiList[i - 1].Nilai) {} else { currentRankIndex = i; }
+                    if (currentRankIndex < 6) top6WithTies.push({ Peringkat: PANGKAT_LABELS[currentRankIndex], nama: NilaiList[i].nama, pangkalan: NilaiList[i].pangkalan, Nilai: NilaiList[i].Nilai, noPeserta: NilaiList[i].noPeserta }); else break;
+                }
+                
+                let card = document.createElement('div'); card.className = "bg-obsidian-900 border border-obsidian-800 rounded-xl overflow-hidden flex flex-col relative shadow-md";
+                let cardHTML = `
+                    <div class="bg-obsidian-950/85 px-4 py-3 border-b border-obsidian-850 flex justify-between items-center"><div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full ${tier === 'SD' ? 'bg-tech-red' : 'bg-tech-yellow'}"></span><h3 class="text-xs font-display font-bold text-white uppercase tracking-wider">${Materi}</h3></div></div>
+                    <div class="p-3 flex-grow flex flex-col">
+                `;
+                if (top6WithTies.length === 0) cardHTML += `<div class="flex-grow flex items-center justify-center p-6 text-[10px] font-mono text-gray-600 uppercase tracking-widest text-center">Standby...</div>`;
+                else {
+                    cardHTML += `<table class="w-full text-left text-[11px]"><thead><tr class="text-[8px] font-mono text-gray-500 uppercase tracking-widest border-b border-obsidian-800"><th class="pb-2 w-14 text-center">Rank</th><th class="pb-2 pl-2">Regu</th><th class="pb-2 text-right">Nilai</th></tr></thead><tbody class="divide-y divide-obsidian-850">`;
+                    top6WithTies.forEach(j => {
+                        let rankTextClass = "text-gray-500"; let valTextClass = "text-gray-300";
+                        if (j.Peringkat === "Rank 1") { rankTextClass = "text-tech-yellow font-bold"; valTextClass = "text-tech-yellow font-bold"; } 
+                        else if (j.Peringkat === "Rank 2") { rankTextClass = "text-gray-300 font-semibold"; valTextClass = "text-white"; } 
+                        else if (j.Peringkat === "Rank 3") { rankTextClass = "text-tech-red font-semibold"; }
+                        
+                        const isUserOwned = (state.user.role === 'peserta-materi' && state.user.sessionKey === ('peserta_' + j.noPeserta));
+                        cardHTML += `
+                            <tr class="${isUserOwned ? 'bg-tech-yellow/10 border-l-2 border-l-tech-yellow' : ''} hover:bg-white/[0.01]">
+                                <td class="py-2 text-center align-middle"><span class="text-[9px] font-mono uppercase tracking-wider ${rankTextClass}">${j.Peringkat.replace('Rank ', 'R').replace('Honor ', 'H')}</span></td>
+                                <td class="py-2 pl-2"><div class="font-bold text-xs ${isUserOwned ? 'text-tech-yellow' : 'text-gray-300'}">${j.nama}</div><div class="text-[8px] font-mono text-gray-600 uppercase truncate max-w-[120px]">${j.pangkalan}</div></td>
+                                <td class="py-2 text-right font-mono font-bold text-xs ${valTextClass}">${j.Nilai.toFixed(1)}</td>
+                            </tr>
+                        `;
+                    });
+                    cardHTML += `</tbody></table>`;
+                }
+                cardHTML += `</div>`; card.innerHTML = cardHTML; grid.appendChild(card);
+            });
+        }
+
+        function renderLiveReports() { renderLiveGridForTier('SD', state.activeLiveSdGender, 'live-report-sd-grid'); renderLiveGridForTier('SMP', state.activeLiveSmpGender, 'live-report-smp-grid'); }
+
+        function renderSeparateAdminTables() {
+            const ids = { "Putra SD": "table-manajer-pasd", "Putri SD": "table-manajer-pisd", "Putra SMP": "table-manajer-pasmp", "Putri SMP": "table-manajer-pismp" };
+            KATEGORI_LIST.forEach(kat => {
+                const tbody = document.getElementById(ids[kat]); if(!tbody) return; tbody.innerHTML = "";
+                const filtered = state.peserta.filter(p => p.kategori === kat);
+                if (filtered.length === 0) { tbody.innerHTML = `<tr><td class="p-3 text-center font-mono text-[9px] text-gray-600 uppercase">Empty db</td></tr>`; return; }
+                filtered.forEach(p => {
+                    const countNilai = state.nilai[p.noPeserta] ? Object.keys(state.nilai[p.noPeserta]).length : 0;
+                    const isComplete = countNilai === Materi_LIST.length;
+                    tbody.innerHTML += `<tr class="hover:bg-white/[0.02]"><td class="p-2 font-mono font-bold text-tech-yellow w-12 text-[11px]">${p.noPeserta}</td><td class="p-2"><div class="font-bold text-white text-[11px]">${p.nama}</div><div class="text-[8px] font-mono text-gray-600 uppercase">${p.pangkalan}</div></td><td class="p-2 text-right align-middle"><span class="px-2 py-0.5 rounded text-[8px] font-mono uppercase tracking-wider ${isComplete ? 'bg-green-500/10 text-green-400' : 'bg-obsidian-850 text-gray-500'}">${countNilai}/${Materi_LIST.length} Mod</span></td></tr>`;
+                });
+            });
+
+            const lkbbIds = { "SD": "table-manajer-lkbb-sd", "SMP": "table-manajer-lkbb-smp" };
+            ["SD", "SMP"].forEach(kat => {
+                const tbody = document.getElementById(lkbbIds[kat]); if(!tbody) return; tbody.innerHTML = "";
+                const filtered = state.pesertaLkbb.filter(p => p.kategori === kat);
+                if (filtered.length === 0) { tbody.innerHTML = `<tr><td class="p-3 text-center font-mono text-[9px] text-gray-600 uppercase">Empty db</td></tr>`; return; }
+                filtered.forEach(p => {
+                    const n1 = getLkbbScoreByJuri(p.noPeserta, 'juri1'); const n2 = getLkbbScoreByJuri(p.noPeserta, 'juri2'); const nV = getLkbbScoreByJuri(p.noPeserta, 'vapor');
+                    const hasNilai = (n1 > 0 || n2 > 0 || nV > 0);
+                    tbody.innerHTML += `<tr class="hover:bg-white/[0.02]"><td class="p-2 font-mono font-bold text-tech-blue w-12 text-[11px]">${p.noPeserta}</td><td class="p-2"><div class="font-bold text-white text-[11px]">${p.pangkalan}</div><div class="text-[8px] font-mono text-gray-600 uppercase">Lkbb</div></td><td class="p-2 text-right align-middle"><span class="px-2 py-0.5 rounded text-[8px] font-mono uppercase tracking-wider ${hasNilai ? 'bg-green-500/10 text-green-400' : 'bg-obsidian-850 text-gray-500'}">${hasNilai ? 'Dinilai' : 'Kosong'}</span></td></tr>`;
+                });
+            });
+        }
+
+        function initMateriDropdownOptions() {
+            const select = document.getElementById('score-Materi'); if(!select) return; select.innerHTML = "";
+            Materi_LIST.forEach(l => { select.innerHTML += `<option value="${l}" class="bg-obsidian-900">${l}</option>`; });
+        }
+
+        function generateAutomatedNoPeserta() {
+            const kat = document.getElementById('p-kategori').value; const inp = document.getElementById('p-nopeserta'); if(!inp) return;
+            let pref = ""; if(kat==="Putra SD") pref="PASD"; else if(kat==="Putri SD") pref="PISD"; else if(kat==="Putra SMP") pref="PASMP"; else if(kat==="Putri SMP") pref="PISMP";
+            const count = state.peserta.filter(p => p.kategori === kat).length; inp.value = pref + String(count + 1).padStart(2, '0');
+        }
+
+        function generateAutomatedNoPesertaLkbb() {
+            const kat = document.getElementById('p-kategori-lkbb').value; const inp = document.getElementById('p-nopeserta-lkbb'); if(!inp) return;
+            let pref = kat === "SD" ? "LKSD" : "LKSMP";
+            const count = state.pesertaLkbb.filter(p => p.kategori === kat).length; inp.value = pref + String(count + 1).padStart(2, '0');
+        }
+
+        function updateAdminPesertaDropdown() {
+            const d = document.getElementById('score-peserta'); if(!d) return; const k = document.getElementById('score-kategori').value; d.innerHTML = "";
+            const f = state.peserta.filter(p => p.kategori === k); if(f.length===0){ d.innerHTML = `<option value="" class="bg-obsidian-900">-- Kosong --</option>`; return; }
+            f.forEach(p => { d.innerHTML += `<option value="${p.noPeserta}" class="bg-obsidian-900">[${p.noPeserta}] ${p.nama}</option>`; });
+        }
+
+        function updateAdminPesertaLkbbDropdown() {
+            const d = document.getElementById('score-peserta-lkbb'); 
+            if(!d) return; 
+            const k = document.getElementById('score-kategori-lkbb').value; 
+            d.innerHTML = "<option value=''>-- Pilih Pasukan --</option>";
+            const f = state.pesertaLkbb.filter(p => p.kategori === k); 
+            if(f.length===0){ d.innerHTML = `<option value="" class="bg-obsidian-900">-- Kosong --</option>`; return; }
+            f.forEach(p => { d.innerHTML += `<option value="${p.noPeserta}" class="bg-obsidian-900">[${p.noPeserta}] ${p.pangkalan}</option>`; });
+        }
+
+        function setupLkbbInputForm() {
+            const container = document.getElementById('lkbb-movements-container');
+            const kategori = document.getElementById('score-kategori-lkbb').value;
+            const juriId = document.getElementById('score-juri-lkbb').value;
+            let moves = kategori === 'SD' ? LKBB_SD_MOVES : LKBB_SMP_MOVES;
+            
+            const vaporMoves = ["Opening Variasi", "Penggunaan PBB Murni", "Kekompakan", "Opening Formasi", "Closing Formasi"];
+            
+            container.innerHTML = '';
+            
+            moves.forEach((move, index) => {
+                const isVaporMove = vaporMoves.includes(move);
+                if (juriId === 'vapor' && !isVaporMove) return; 
+                if (juriId !== 'vapor' && isVaporMove) return;
+
+                const moveId = `move_${index}`;
+                const options = [50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100];
+                
+                let optionsHtml = options.map(val => `
+                    <label class="cursor-pointer">
+                        <input type="radio" name="${moveId}" value="${val}" class="peer sr-only" required>
+                        <div class="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-md text-[10px] sm:text-xs font-bold bg-obsidian-950 border border-obsidian-800 text-gray-500 peer-checked:bg-tech-blue peer-checked:text-white peer-checked:border-tech-blue hover:bg-obsidian-800 transition-all shadow-sm">${val}</div>
+                    </label>
+                `).join('');
+
+                container.innerHTML += `
+                    <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-3 p-3 bg-obsidian-900 border border-obsidian-800 rounded-lg transition hover:border-obsidian-700">
+                        <label class="text-xs font-semibold text-gray-300 w-full xl:w-1/4">${index + 1}. ${move}</label>
+                        <div class="flex flex-wrap w-full xl:w-3/4 justify-start xl:justify-between gap-1.5">
+                            ${optionsHtml}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function populateLkbbScores() {
+            const noPeserta = document.getElementById('score-peserta-lkbb').value;
+            const juriId = document.getElementById('score-juri-lkbb').value;
+            
+            document.querySelectorAll('#lkbb-movements-container input[type="radio"]').forEach(r => r.checked = false);
+            
+            if(noPeserta && state.nilaiLkbb[noPeserta] && state.nilaiLkbb[noPeserta][juriId]) {
+                const data = state.nilaiLkbb[noPeserta][juriId];
+                const moves = document.getElementById('score-kategori-lkbb').value === 'SD' ? LKBB_SD_MOVES : LKBB_SMP_MOVES;
+                
+                moves.forEach((move, index) => {
+                    if(data[move]) {
+                        const radio = document.querySelector(`input[name="move_${index}"][value="${data[move]}"]`);
+                        if(radio) radio.checked = true;
+                    }
+                });
+            }
+        }
+
+        document.getElementById('form-add-peserta').onsubmit = function(e) {
+            e.preventDefault();
+            const p = {
+                noPeserta: document.getElementById('p-nopeserta').value,
+                kategori: document.getElementById('p-kategori').value,
+                nama: document.getElementById('p-nama').value.trim(),
+                pangkalan: document.getElementById('p-pangkalan').value.trim()
+            };
+            const idx = state.peserta.length;
+            db.ref(`scopex_data/peserta/${idx}`).set(p, (error) => {
+                if(!error) { showToast('Regu berhasil didaftarkan'); document.getElementById('p-nama').value=''; document.getElementById('p-pangkalan').value=''; generateAutomatedNoPeserta(); }
+            });
+        };
+
+        document.getElementById('form-add-peserta-lkbb').onsubmit = function(e) {
+            e.preventDefault();
+            const p = {
+                noPeserta: document.getElementById('p-nopeserta-lkbb').value,
+                kategori: document.getElementById('p-kategori-lkbb').value,
+                pangkalan: document.getElementById('p-pangkalan-lkbb').value.trim()
+            };
+            const idx = state.pesertaLkbb.length;
+            db.ref(`scopex_data/pesertaLkbb/${idx}`).set(p, (error) => {
+                if(!error) { showToast('Pasukan LKBB berhasil didaftarkan'); document.getElementById('p-pangkalan-lkbb').value=''; generateAutomatedNoPesertaLkbb(); }
+            });
+        };
+
+        document.getElementById('form-input-nilai').onsubmit = function(e) {
+            e.preventDefault();
+            const noPeserta = document.getElementById('score-peserta').value;
+            const materi = document.getElementById('score-Materi').value;
+            const nilai = parseFloat(document.getElementById('score-nilai').value);
+            
+            if(!noPeserta) { showModal('Error', 'Pilih regu terlebih dahulu', 'error'); return; }
+            
+            db.ref(`scopex_data/nilai/${noPeserta}/${materi}`).set(nilai, (error) => {
+                if(error) showModal('Error', 'Gagal menyimpan nilai', 'error');
+                else { showToast(`Nilai ${materi} berhasil disimpan`); document.getElementById('score-nilai').value = ''; }
+            });
+        };
+
+        document.getElementById('form-input-nilai-lkbb').onsubmit = function(e) {
+            e.preventDefault();
+            const kategori = document.getElementById('score-kategori-lkbb').value;
+            const juriId = document.getElementById('score-juri-lkbb').value;
+            const noPeserta = document.getElementById('score-peserta-lkbb').value;
+            
+            if(!noPeserta) { showModal('Error', 'Pilih pasukan terlebih dahulu', 'error'); return; }
+            
+            let moves = kategori === 'SD' ? LKBB_SD_MOVES : LKBB_SMP_MOVES;
+            let scoreData = {};
+            
+            moves.forEach((move, index) => {
+                const selected = document.querySelector(`input[name="move_${index}"]:checked`);
+                if(selected) scoreData[move] = parseInt(selected.value);
+            });
+            
+            db.ref(`scopex_data/nilaiLkbb/${noPeserta}/${juriId}`).set(scoreData, (error) => {
+                if(error) showModal('Error', 'Gagal menyimpan nilai', 'error');
+                else showToast('Nilai LKBB berhasil disimpan', 'border-l-tech-blue');
+            });
+        };
+
+        function downloadLeaderboardPDF(tier) {
+            const { jsPDF } = window.jspdf; const doc = new jsPDF();
+            doc.text(`Peringkat Materi ${tier} - SCOPEX VOL-II`, 14, 20);
+            
+            let rekapList = [];
+            state.peserta.forEach(p => {
+                const isSD = p.kategori.includes("SD");
+                if ((tier === 'SD' && isSD) || (tier === 'SMP' && !isSD)) {
+                    let totalPoin = 0; Materi_LIST.forEach(m => { if (state.nilai[p.noPeserta] && state.nilai[p.noPeserta][m] !== undefined) totalPoin += state.nilai[p.noPeserta][m]; });
+                    rekapList.push({ ...p, total: totalPoin });
+                }
+            });
+            rekapList.sort((a, b) => b.total - a.total);
+            
+            doc.autoTable({
+                startY: 30,
+                head: [['Rank', 'Nama Regu', 'Pangkalan', 'Total Nilai']],
+                body: rekapList.map((r, i) => [String(i + 1), r.nama, r.pangkalan, r.total.toFixed(1)]),
+                theme: 'grid',
+                styles: { fontSize: 8, font: 'helvetica' },
+                headStyles: { fillColor: tier === 'SD' ? [225, 29, 72] : [245, 158, 11] }
+            });
+            doc.save(`Peringkat_Materi_${tier}.pdf`);
+        }
+        
+        function downloadLkbbPDF(tier) {
+            const { jsPDF } = window.jspdf; const doc = new jsPDF();
+            doc.text(`Peringkat LKBB ${tier} - SCOPEX VOL-II`, 14, 20);
+            
+            let rekapList = [];
+            state.pesertaLkbb.forEach(p => {
+                if (p.kategori === tier) {
+                    let totalPoin = calculateLkbbScore(p.noPeserta);
+                    rekapList.push({ ...p, total: totalPoin });
+                }
+            });
+            rekapList.sort((a, b) => b.total - a.total);
+            
+            doc.autoTable({
+                startY: 30,
+                head: [['Rank', 'Sekolah / Basis', 'Nilai Akhir']],
+                body: rekapList.map((r, i) => [String(i + 1), r.pangkalan, r.total]),
+                theme: 'grid',
+                styles: { fontSize: 8, font: 'helvetica' },
+                headStyles: { fillColor: tier === 'SD' ? [59, 130, 246] : [168, 85, 247] }
+            });
+            doc.save(`Peringkat_LKBB_${tier}.pdf`);
+        }
+
+        function downloadLiveReportPDF(tier) {
+            showToast("Memproses PDF Live Materi...", "border-l-tech-yellow");
+            setTimeout(() => showModal("Info Sistem", "Fungsi unduh detail Live PDF Materi sedang dalam persiapan.", "info"), 1000);
+        }
+
+        function downloadLiveLkbbPDF(tier) {
+            showToast("Memproses PDF Live LKBB...", "border-l-tech-blue");
+            setTimeout(() => showModal("Info Sistem", "Fungsi unduh detail Live PDF LKBB sedang dalam persiapan.", "info"), 1000);
+        }
+    </script>
+</body>
+</html>
+
