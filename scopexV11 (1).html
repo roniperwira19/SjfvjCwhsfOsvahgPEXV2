@@ -769,7 +769,7 @@
         // Selama masih placeholder ini, App Check TIDAK AKAN aktif (tidak akan error, cuma diabaikan Firebase).
         const RECAPTCHA_V3_SITE_KEY = "6LcyaVstAAAAALDs0qEuENHj3erFsLIkFKxAyecY";
 
-        if (RECAPTCHA_V3_SITE_KEY && RECAPTCHA_V3_SITE_KEY !== "GANTI_DENGAN_SITE_KEY_RECAPTCHA_ANDA") {
+        if (RECAPTCHA_V3_SITE_KEY && RECAPTCHA_V3_SITE_KEY !== "6LcyaVstAAAAALDs0qEuENHj3erFsLIkFKxAyecY") {
             const appCheck = firebase.appCheck();
             appCheck.activate(
                 new firebase.appCheck.ReCaptchaV3Provider(RECAPTCHA_V3_SITE_KEY),
