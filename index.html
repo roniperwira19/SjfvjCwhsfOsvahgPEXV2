@@ -633,11 +633,7 @@
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3 pb-4 border-b border-obsidian-800">
                 <div>
                     <h2 class="text-xl font-display font-bold text-white tracking-widest uppercase">Grid Manager Database</h2>
-                    <p class="text-xs text-gray-400 font-mono mt-1">> Panel pemantauan lengkap dan opsi reset sistem</p>
-                </div>
-                <div class="flex gap-2 w-full sm:w-auto">
-                    <button onclick="confirmLoadSimulasiData()" class="flex-1 sm:flex-none text-[10px] font-mono text-tech-yellow border border-tech-yellow/20 hover:bg-tech-yellow/10 px-3 py-2 rounded-lg transition-colors">INJECT SIMULASI</button>
-                    <button onclick="confirmClearDatabase()" class="flex-1 sm:flex-none text-[10px] font-mono text-red-500 border border-red-500/20 hover:bg-red-500/10 px-3 py-2 rounded-lg transition-colors">RESET DATABASE</button>
+                    <p class="text-xs text-gray-400 font-mono mt-1">> Panel pemantauan data peserta &amp; nilai. Klik ikon hapus untuk mencabut regu/pasukan tertentu.</p>
                 </div>
             </div>
 
@@ -856,14 +852,40 @@
             setTimeout(() => { t.classList.add('opacity-0', 'translate-y-4'); setTimeout(() => t.classList.add('hidden'), 300); }, 3000);
         }
 
-        function confirmLoadSimulasiData() { showModal("Konfirmasi Sistem", "Fungsi simulasi dimatikan di mode produksi.", "warning"); }
-        function confirmClearDatabase() { showModal("TINDAKAN CRITICAL", "Menghapus database bersifat permanen, termasuk Data LKBB. Lanjutkan?", "confirm", clearDatabase); }
-        
-        function clearDatabase() {
-            db.ref('scopex_data').set(null, (error) => {
-                if(!error) { showToast('Database telah di-reset'); state.peserta=[]; state.nilai={}; state.pesertaLkbb=[]; state.nilaiLkbb={}; state.profiles={}; }
+        // ================= ADMIN: HAPUS REGU / PASUKAN (GANTI FITUR RESET DATABASE) =================
+        function hapusPesertaMateri(noPeserta) {
+            showModal('Konfirmasi Hapus', `Hapus regu <b>${noPeserta}</b> beserta seluruh nilainya? Tindakan ini permanen dan tidak bisa dibatalkan.`, 'confirm', () => {
+                const sisaPeserta = state.peserta.filter(p => p.noPeserta !== noPeserta);
+                const updates = {};
+                updates['scopex_data/peserta'] = sisaPeserta;
+                updates['scopex_data/nilai/' + noPeserta] = null;
+                // Cabut juga akses login peserta ini jika pernah diberi akses (mencegah akun "hantu")
+                const emailKeyToRemove = Object.keys(state.userRoles || {}).find(k => state.userRoles[k].sessionKey === 'peserta_' + noPeserta);
+                if (emailKeyToRemove) updates['scopex_data/userRoles/' + emailKeyToRemove] = null;
+
+                db.ref().update(updates, (error) => {
+                    if (!error) showToast('Regu berhasil dihapus', 'border-l-tech-red');
+                    else showModal('Error', 'Gagal menghapus regu: ' + error.message, 'error');
+                });
             });
         }
+
+        function hapusPesertaLkbb(noPeserta) {
+            showModal('Konfirmasi Hapus', `Hapus pasukan LKBB <b>${noPeserta}</b> beserta seluruh nilainya? Tindakan ini permanen dan tidak bisa dibatalkan.`, 'confirm', () => {
+                const sisaPeserta = state.pesertaLkbb.filter(p => p.noPeserta !== noPeserta);
+                const updates = {};
+                updates['scopex_data/pesertaLkbb'] = sisaPeserta;
+                updates['scopex_data/nilaiLkbb/' + noPeserta] = null;
+                const emailKeyToRemove = Object.keys(state.userRoles || {}).find(k => state.userRoles[k].sessionKey === 'peserta_lkbb_' + noPeserta);
+                if (emailKeyToRemove) updates['scopex_data/userRoles/' + emailKeyToRemove] = null;
+
+                db.ref().update(updates, (error) => {
+                    if (!error) showToast('Pasukan LKBB berhasil dihapus', 'border-l-tech-red');
+                    else showModal('Error', 'Gagal menghapus pasukan: ' + error.message, 'error');
+                });
+            });
+        }
+        // =================================================
 
         db.ref('scopex_data').on('value', (snapshot) => {
             const cloudData = snapshot.val() || {};
@@ -1612,7 +1634,7 @@
                 filtered.forEach(p => {
                     const countNilai = state.nilai[p.noPeserta] ? Object.keys(state.nilai[p.noPeserta]).length : 0;
                     const isComplete = countNilai === Materi_LIST.length;
-                    tbody.innerHTML += `<tr class="hover:bg-white/[0.02]"><td class="p-2 font-mono font-bold text-tech-yellow w-12 text-[11px]">${p.noPeserta}</td><td class="p-2"><div class="font-bold text-white text-[11px]">${p.nama}</div><div class="text-[8px] font-mono text-gray-600 uppercase">${p.pangkalan}</div></td><td class="p-2 text-right align-middle"><span class="px-2 py-0.5 rounded text-[8px] font-mono uppercase tracking-wider ${isComplete ? 'bg-green-500/10 text-green-400' : 'bg-obsidian-850 text-gray-500'}">${countNilai}/${Materi_LIST.length} Mod</span></td></tr>`;
+                    tbody.innerHTML += `<tr class="hover:bg-white/[0.02]"><td class="p-2 font-mono font-bold text-tech-yellow w-12 text-[11px]">${p.noPeserta}</td><td class="p-2"><div class="font-bold text-white text-[11px]">${p.nama}</div><div class="text-[8px] font-mono text-gray-600 uppercase">${p.pangkalan}</div></td><td class="p-2 text-right align-middle"><span class="px-2 py-0.5 rounded text-[8px] font-mono uppercase tracking-wider ${isComplete ? 'bg-green-500/10 text-green-400' : 'bg-obsidian-850 text-gray-500'}">${countNilai}/${Materi_LIST.length} Mod</span></td><td class="p-1 text-right align-middle"><button onclick="hapusPesertaMateri('${p.noPeserta}')" class="text-red-500 hover:text-red-400 px-1.5 py-1"><i class="fa-solid fa-trash text-[10px]"></i></button></td></tr>`;
                 });
             });
 
@@ -1624,7 +1646,7 @@
                 filtered.forEach(p => {
                     const n1 = getLkbbScoreByJuri(p.noPeserta, 'juri1'); const n2 = getLkbbScoreByJuri(p.noPeserta, 'juri2'); const nV = getLkbbScoreByJuri(p.noPeserta, 'vapor');
                     const hasNilai = (n1 > 0 || n2 > 0 || nV > 0);
-                    tbody.innerHTML += `<tr class="hover:bg-white/[0.02]"><td class="p-2 font-mono font-bold text-tech-blue w-12 text-[11px]">${p.noPeserta}</td><td class="p-2"><div class="font-bold text-white text-[11px]">${p.pangkalan}</div><div class="text-[8px] font-mono text-gray-600 uppercase">Lkbb</div></td><td class="p-2 text-right align-middle"><span class="px-2 py-0.5 rounded text-[8px] font-mono uppercase tracking-wider ${hasNilai ? 'bg-green-500/10 text-green-400' : 'bg-obsidian-850 text-gray-500'}">${hasNilai ? 'Dinilai' : 'Kosong'}</span></td></tr>`;
+                    tbody.innerHTML += `<tr class="hover:bg-white/[0.02]"><td class="p-2 font-mono font-bold text-tech-blue w-12 text-[11px]">${p.noPeserta}</td><td class="p-2"><div class="font-bold text-white text-[11px]">${p.pangkalan}</div><div class="text-[8px] font-mono text-gray-600 uppercase">Lkbb</div></td><td class="p-2 text-right align-middle"><span class="px-2 py-0.5 rounded text-[8px] font-mono uppercase tracking-wider ${hasNilai ? 'bg-green-500/10 text-green-400' : 'bg-obsidian-850 text-gray-500'}">${hasNilai ? 'Dinilai' : 'Kosong'}</span></td><td class="p-1 text-right align-middle"><button onclick="hapusPesertaLkbb('${p.noPeserta}')" class="text-red-500 hover:text-red-400 px-1.5 py-1"><i class="fa-solid fa-trash text-[10px]"></i></button></td></tr>`;
                 });
             });
         }
@@ -1841,4 +1863,3 @@
     </script>
 </body>
 </html>
-
