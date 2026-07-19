@@ -768,6 +768,43 @@
         auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
         let isRegisterMode = false;
 
+        // Mencegah Stored XSS: semua data yang berasal dari input user (nama regu, pangkalan, username, email)
+        // WAJIB melewati fungsi ini sebelum dimasukkan ke innerHTML.
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // ================= INDIKATOR STATUS SIMPAN (Menyimpan.../Tersimpan) =================
+        function markSaving(btn) {
+            if (!btn) return;
+            btn.dataset.originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.classList.add('opacity-70', 'cursor-not-allowed');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Menyimpan...';
+        }
+        function markSaved(btn, label) {
+            if (!btn) return;
+            btn.innerHTML = `<i class="fa-solid fa-check mr-1.5"></i> ${label || 'Tersimpan'}`;
+            btn.classList.remove('opacity-70', 'cursor-not-allowed');
+            setTimeout(() => restoreButton(btn), 1600);
+        }
+        function markFailed(btn) {
+            restoreButton(btn);
+        }
+        function restoreButton(btn) {
+            if (!btn) return;
+            btn.disabled = false;
+            btn.classList.remove('opacity-70', 'cursor-not-allowed');
+            if (btn.dataset.originalText) btn.innerHTML = btn.dataset.originalText;
+        }
+        // =================================================
+
         if (!localStorage.getItem('scopex_deviceId')) {
             localStorage.setItem('scopex_deviceId', 'DEV-' + Math.random().toString(36).substr(2, 9).toUpperCase());
         }
@@ -1131,7 +1168,7 @@
                             </div>
                             <div class="flex flex-col min-w-0">
                                 <span class="text-[8px] font-mono ${roleColor} uppercase tracking-widest truncate">Auth: ${state.user.role}</span>
-                                <span class="text-xs font-bold text-white truncate">${displayName}</span>
+                                <span class="text-xs font-bold text-white truncate">${escapeHtml(displayName)}</span>
                             </div>
                         </div>
                         <button onclick="handleLogout()" class="w-7 h-7 rounded-lg bg-red-950/20 hover:bg-red-950/40 text-red-500 transition-colors flex items-center justify-center shrink-0">
@@ -1306,7 +1343,7 @@
             db.ref(`scopex_data/userRoles/${emailKey}`).once('value').then(snap => {
                 const mapping = snap.val();
                 if (!mapping || !mapping.role) {
-                    showModal('Akses Belum Aktif', `Akun <b>${fbUser.email}</b> berhasil masuk, namun belum diberi akses oleh Admin. Silakan hubungi Admin SCOPEX VOL-II untuk aktivasi akun.`, 'warning');
+                    showModal('Akses Belum Aktif', `Akun <b>${escapeHtml(fbUser.email)}</b> berhasil masuk, namun belum diberi akses oleh Admin. Silakan hubungi Admin SCOPEX VOL-II untuk aktivasi akun.`, 'warning');
                     auth.signOut();
                     return;
                 }
@@ -1342,13 +1379,13 @@
         function updateAkunPesertaMateriDropdown() {
             const select = document.getElementById('akun-peserta-materi'); if (!select) return;
             if (state.peserta.length === 0) { select.innerHTML = `<option value="" class="bg-obsidian-900">-- Belum ada regu terdaftar --</option>`; return; }
-            select.innerHTML = state.peserta.map(p => `<option value="${p.noPeserta}" class="bg-obsidian-900">[${p.noPeserta}] ${p.nama}</option>`).join('');
+            select.innerHTML = state.peserta.map(p => `<option value="${p.noPeserta}" class="bg-obsidian-900">[${p.noPeserta}] ${escapeHtml(p.nama)}</option>`).join('');
         }
 
         function updateAkunPesertaLkbbDropdown() {
             const select = document.getElementById('akun-peserta-lkbb'); if (!select) return;
             if (state.pesertaLkbb.length === 0) { select.innerHTML = `<option value="" class="bg-obsidian-900">-- Belum ada pasukan terdaftar --</option>`; return; }
-            select.innerHTML = state.pesertaLkbb.map(p => `<option value="${p.noPeserta}" class="bg-obsidian-900">[${p.noPeserta}] ${p.pangkalan}</option>`).join('');
+            select.innerHTML = state.pesertaLkbb.map(p => `<option value="${p.noPeserta}" class="bg-obsidian-900">[${p.noPeserta}] ${escapeHtml(p.pangkalan)}</option>`).join('');
         }
 
         function handleAkunRoleChange() {
@@ -1418,8 +1455,8 @@
             tbody.innerHTML = entries.map(([key, m]) => `
                 <tr class="hover:bg-white/[0.02]">
                     <td class="p-2">
-                        <div class="font-bold text-white text-[11px]">${m.username || '-'}</div>
-                        <div class="text-[9px] font-mono text-gray-500">${m.email || ''}</div>
+                        <div class="font-bold text-white text-[11px]">${escapeHtml(m.username) || '-'}</div>
+                        <div class="text-[9px] font-mono text-gray-500">${escapeHtml(m.email) || ''}</div>
                     </td>
                     <td class="p-2 text-[10px] font-mono text-tech-blue uppercase">${roleLabel[m.role] || m.role}</td>
                     <td class="p-2 text-right">
@@ -1480,8 +1517,8 @@
                 body.innerHTML += `
                     <tr class="${rowClass}">
                         <td class="py-3.5 px-5 text-center align-middle">${rankVisual}</td>
-                        <td class="py-3.5 px-5"><div class="font-bold text-white tracking-wide ${isOwned ? 'text-tech-yellow' : ''}">${r.nama}</div><div class="text-[9px] font-mono text-gray-600 uppercase mt-0.5">ID: ${r.noPeserta} | ${r.kategori}</div></td>
-                        <td class="py-3.5 px-5 text-gray-400 text-xs">${r.pangkalan}</td>
+                        <td class="py-3.5 px-5"><div class="font-bold text-white tracking-wide ${isOwned ? 'text-tech-yellow' : ''}">${escapeHtml(r.nama)}</div><div class="text-[9px] font-mono text-gray-600 uppercase mt-0.5">ID: ${r.noPeserta} | ${escapeHtml(r.kategori)}</div></td>
+                        <td class="py-3.5 px-5 text-gray-400 text-xs">${escapeHtml(r.pangkalan)}</td>
                         <td class="py-3.5 px-5 text-right font-mono font-bold text-sm ${highlightClass}">${r.total.toFixed(1)} <span class="text-[9px] text-gray-500 font-normal uppercase">pts</span></td>
                     </tr>
                 `;
@@ -1513,7 +1550,7 @@
                 body.innerHTML += `
                     <tr class="${rowClass}">
                         <td class="py-3.5 px-5 text-center align-middle">${rankVisual}</td>
-                        <td class="py-3.5 px-5"><div class="font-bold text-white tracking-wide ${isOwned ? 'text-tech-blue' : ''}">${r.pangkalan}</div><div class="text-[9px] font-mono text-gray-600 uppercase mt-0.5">ID LKBB: ${r.noPeserta}</div></td>
+                        <td class="py-3.5 px-5"><div class="font-bold text-white tracking-wide ${isOwned ? 'text-tech-blue' : ''}">${escapeHtml(r.pangkalan)}</div><div class="text-[9px] font-mono text-gray-600 uppercase mt-0.5">ID LKBB: ${r.noPeserta}</div></td>
                         <td class="py-3.5 px-5 text-right font-mono font-bold text-sm ${highlightClass}">${r.total} <span class="text-[9px] text-gray-500 font-normal uppercase">pts</span></td>
                     </tr>
                 `;
@@ -1558,7 +1595,7 @@
                     body.innerHTML += `
                         <tr class="hover:bg-white/[0.02]">
                             <td class="py-3 px-5 text-center align-middle font-mono text-gray-500 text-xs">${index+1}</td>
-                            <td class="py-3 px-5"><div class="font-bold text-white tracking-wide">${r.pangkalan}</div><div class="text-[9px] font-mono text-gray-600 uppercase mt-0.5">ID LKBB: ${r.noPeserta}</div></td>
+                            <td class="py-3 px-5"><div class="font-bold text-white tracking-wide">${escapeHtml(r.pangkalan)}</div><div class="text-[9px] font-mono text-gray-600 uppercase mt-0.5">ID LKBB: ${r.noPeserta}</div></td>
                             <td class="py-3 px-5 text-right font-mono font-bold text-sm ${hl}">${r.total}</td>
                         </tr>
                     `;
@@ -1612,7 +1649,7 @@
                         cardHTML += `
                             <tr class="${isUserOwned ? 'bg-tech-yellow/10 border-l-2 border-l-tech-yellow' : ''} hover:bg-white/[0.01]">
                                 <td class="py-2 text-center align-middle"><span class="text-[9px] font-mono uppercase tracking-wider ${rankTextClass}">${j.Peringkat.replace('Rank ', 'R').replace('Honor ', 'H')}</span></td>
-                                <td class="py-2 pl-2"><div class="font-bold text-xs ${isUserOwned ? 'text-tech-yellow' : 'text-gray-300'}">${j.nama}</div><div class="text-[8px] font-mono text-gray-600 uppercase truncate max-w-[120px]">${j.pangkalan}</div></td>
+                                <td class="py-2 pl-2"><div class="font-bold text-xs ${isUserOwned ? 'text-tech-yellow' : 'text-gray-300'}">${escapeHtml(j.nama)}</div><div class="text-[8px] font-mono text-gray-600 uppercase truncate max-w-[120px]">${escapeHtml(j.pangkalan)}</div></td>
                                 <td class="py-2 text-right font-mono font-bold text-xs ${valTextClass}">${j.Nilai.toFixed(1)}</td>
                             </tr>
                         `;
@@ -1634,7 +1671,7 @@
                 filtered.forEach(p => {
                     const countNilai = state.nilai[p.noPeserta] ? Object.keys(state.nilai[p.noPeserta]).length : 0;
                     const isComplete = countNilai === Materi_LIST.length;
-                    tbody.innerHTML += `<tr class="hover:bg-white/[0.02]"><td class="p-2 font-mono font-bold text-tech-yellow w-12 text-[11px]">${p.noPeserta}</td><td class="p-2"><div class="font-bold text-white text-[11px]">${p.nama}</div><div class="text-[8px] font-mono text-gray-600 uppercase">${p.pangkalan}</div></td><td class="p-2 text-right align-middle"><span class="px-2 py-0.5 rounded text-[8px] font-mono uppercase tracking-wider ${isComplete ? 'bg-green-500/10 text-green-400' : 'bg-obsidian-850 text-gray-500'}">${countNilai}/${Materi_LIST.length} Mod</span></td><td class="p-1 text-right align-middle"><button onclick="hapusPesertaMateri('${p.noPeserta}')" class="text-red-500 hover:text-red-400 px-1.5 py-1"><i class="fa-solid fa-trash text-[10px]"></i></button></td></tr>`;
+                    tbody.innerHTML += `<tr class="hover:bg-white/[0.02]"><td class="p-2 font-mono font-bold text-tech-yellow w-12 text-[11px]">${p.noPeserta}</td><td class="p-2"><div class="font-bold text-white text-[11px]">${escapeHtml(p.nama)}</div><div class="text-[8px] font-mono text-gray-600 uppercase">${escapeHtml(p.pangkalan)}</div></td><td class="p-2 text-right align-middle"><span class="px-2 py-0.5 rounded text-[8px] font-mono uppercase tracking-wider ${isComplete ? 'bg-green-500/10 text-green-400' : 'bg-obsidian-850 text-gray-500'}">${countNilai}/${Materi_LIST.length} Mod</span></td><td class="p-1 text-right align-middle"><button onclick="hapusPesertaMateri('${p.noPeserta}')" class="text-red-500 hover:text-red-400 px-1.5 py-1"><i class="fa-solid fa-trash text-[10px]"></i></button></td></tr>`;
                 });
             });
 
@@ -1646,7 +1683,7 @@
                 filtered.forEach(p => {
                     const n1 = getLkbbScoreByJuri(p.noPeserta, 'juri1'); const n2 = getLkbbScoreByJuri(p.noPeserta, 'juri2'); const nV = getLkbbScoreByJuri(p.noPeserta, 'vapor');
                     const hasNilai = (n1 > 0 || n2 > 0 || nV > 0);
-                    tbody.innerHTML += `<tr class="hover:bg-white/[0.02]"><td class="p-2 font-mono font-bold text-tech-blue w-12 text-[11px]">${p.noPeserta}</td><td class="p-2"><div class="font-bold text-white text-[11px]">${p.pangkalan}</div><div class="text-[8px] font-mono text-gray-600 uppercase">Lkbb</div></td><td class="p-2 text-right align-middle"><span class="px-2 py-0.5 rounded text-[8px] font-mono uppercase tracking-wider ${hasNilai ? 'bg-green-500/10 text-green-400' : 'bg-obsidian-850 text-gray-500'}">${hasNilai ? 'Dinilai' : 'Kosong'}</span></td><td class="p-1 text-right align-middle"><button onclick="hapusPesertaLkbb('${p.noPeserta}')" class="text-red-500 hover:text-red-400 px-1.5 py-1"><i class="fa-solid fa-trash text-[10px]"></i></button></td></tr>`;
+                    tbody.innerHTML += `<tr class="hover:bg-white/[0.02]"><td class="p-2 font-mono font-bold text-tech-blue w-12 text-[11px]">${p.noPeserta}</td><td class="p-2"><div class="font-bold text-white text-[11px]">${escapeHtml(p.pangkalan)}</div><div class="text-[8px] font-mono text-gray-600 uppercase">Lkbb</div></td><td class="p-2 text-right align-middle"><span class="px-2 py-0.5 rounded text-[8px] font-mono uppercase tracking-wider ${hasNilai ? 'bg-green-500/10 text-green-400' : 'bg-obsidian-850 text-gray-500'}">${hasNilai ? 'Dinilai' : 'Kosong'}</span></td><td class="p-1 text-right align-middle"><button onclick="hapusPesertaLkbb('${p.noPeserta}')" class="text-red-500 hover:text-red-400 px-1.5 py-1"><i class="fa-solid fa-trash text-[10px]"></i></button></td></tr>`;
                 });
             });
         }
@@ -1671,7 +1708,7 @@
         function updateAdminPesertaDropdown() {
             const d = document.getElementById('score-peserta'); if(!d) return; const k = document.getElementById('score-kategori').value; d.innerHTML = "";
             const f = state.peserta.filter(p => p.kategori === k); if(f.length===0){ d.innerHTML = `<option value="" class="bg-obsidian-900">-- Kosong --</option>`; return; }
-            f.forEach(p => { d.innerHTML += `<option value="${p.noPeserta}" class="bg-obsidian-900">[${p.noPeserta}] ${p.nama}</option>`; });
+            f.forEach(p => { d.innerHTML += `<option value="${p.noPeserta}" class="bg-obsidian-900">[${p.noPeserta}] ${escapeHtml(p.nama)}</option>`; });
         }
 
         function updateAdminPesertaLkbbDropdown() {
@@ -1681,7 +1718,7 @@
             d.innerHTML = "<option value=''>-- Pilih Pasukan --</option>";
             const f = state.pesertaLkbb.filter(p => p.kategori === k); 
             if(f.length===0){ d.innerHTML = `<option value="" class="bg-obsidian-900">-- Kosong --</option>`; return; }
-            f.forEach(p => { d.innerHTML += `<option value="${p.noPeserta}" class="bg-obsidian-900">[${p.noPeserta}] ${p.pangkalan}</option>`; });
+            f.forEach(p => { d.innerHTML += `<option value="${p.noPeserta}" class="bg-obsidian-900">[${p.noPeserta}] ${escapeHtml(p.pangkalan)}</option>`; });
         }
 
         function setupLkbbInputForm() {
@@ -1741,6 +1778,7 @@
 
         document.getElementById('form-add-peserta').onsubmit = function(e) {
             e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
             const p = {
                 noPeserta: document.getElementById('p-nopeserta').value,
                 kategori: document.getElementById('p-kategori').value,
@@ -1748,40 +1786,48 @@
                 pangkalan: document.getElementById('p-pangkalan').value.trim()
             };
             const idx = state.peserta.length;
+            markSaving(btn);
             db.ref(`scopex_data/peserta/${idx}`).set(p, (error) => {
-                if(!error) { showToast('Regu berhasil didaftarkan'); document.getElementById('p-nama').value=''; document.getElementById('p-pangkalan').value=''; generateAutomatedNoPeserta(); }
+                if(!error) { markSaved(btn, 'Tersimpan'); showToast('Regu berhasil didaftarkan'); document.getElementById('p-nama').value=''; document.getElementById('p-pangkalan').value=''; generateAutomatedNoPeserta(); }
+                else { markFailed(btn); showModal('Error', 'Gagal menyimpan regu: ' + error.message, 'error'); }
             });
         };
 
         document.getElementById('form-add-peserta-lkbb').onsubmit = function(e) {
             e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
             const p = {
                 noPeserta: document.getElementById('p-nopeserta-lkbb').value,
                 kategori: document.getElementById('p-kategori-lkbb').value,
                 pangkalan: document.getElementById('p-pangkalan-lkbb').value.trim()
             };
             const idx = state.pesertaLkbb.length;
+            markSaving(btn);
             db.ref(`scopex_data/pesertaLkbb/${idx}`).set(p, (error) => {
-                if(!error) { showToast('Pasukan LKBB berhasil didaftarkan'); document.getElementById('p-pangkalan-lkbb').value=''; generateAutomatedNoPesertaLkbb(); }
+                if(!error) { markSaved(btn, 'Tersimpan'); showToast('Pasukan LKBB berhasil didaftarkan'); document.getElementById('p-pangkalan-lkbb').value=''; generateAutomatedNoPesertaLkbb(); }
+                else { markFailed(btn); showModal('Error', 'Gagal menyimpan pasukan: ' + error.message, 'error'); }
             });
         };
 
         document.getElementById('form-input-nilai').onsubmit = function(e) {
             e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
             const noPeserta = document.getElementById('score-peserta').value;
             const materi = document.getElementById('score-Materi').value;
             const nilai = parseFloat(document.getElementById('score-nilai').value);
             
             if(!noPeserta) { showModal('Error', 'Pilih regu terlebih dahulu', 'error'); return; }
             
+            markSaving(btn);
             db.ref(`scopex_data/nilai/${noPeserta}/${materi}`).set(nilai, (error) => {
-                if(error) showModal('Error', 'Gagal menyimpan nilai', 'error');
-                else { showToast(`Nilai ${materi} berhasil disimpan`); document.getElementById('score-nilai').value = ''; }
+                if(error) { markFailed(btn); showModal('Error', 'Gagal menyimpan nilai', 'error'); }
+                else { markSaved(btn, 'Tersimpan'); showToast(`Nilai ${materi} berhasil disimpan`); document.getElementById('score-nilai').value = ''; }
             });
         };
 
         document.getElementById('form-input-nilai-lkbb').onsubmit = function(e) {
             e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
             const kategori = document.getElementById('score-kategori-lkbb').value;
             const juriId = document.getElementById('score-juri-lkbb').value;
             const noPeserta = document.getElementById('score-peserta-lkbb').value;
@@ -1796,9 +1842,10 @@
                 if(selected) scoreData[move] = parseInt(selected.value);
             });
             
+            markSaving(btn);
             db.ref(`scopex_data/nilaiLkbb/${noPeserta}/${juriId}`).set(scoreData, (error) => {
-                if(error) showModal('Error', 'Gagal menyimpan nilai', 'error');
-                else showToast('Nilai LKBB berhasil disimpan', 'border-l-tech-blue');
+                if(error) { markFailed(btn); showModal('Error', 'Gagal menyimpan nilai', 'error'); }
+                else { markSaved(btn, 'Tersimpan'); showToast('Nilai LKBB berhasil disimpan', 'border-l-tech-blue'); }
             });
         };
 
