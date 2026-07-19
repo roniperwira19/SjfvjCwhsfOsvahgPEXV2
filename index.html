@@ -15,6 +15,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-check-compat.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
@@ -762,6 +763,23 @@
         };
 
         firebase.initializeApp(firebaseConfig);
+
+        // ================= FIREBASE APP CHECK =================
+        // GANTI teks di bawah ini dengan Site Key reCAPTCHA v3 Anda (lihat panduan dari Claude).
+        // Selama masih placeholder ini, App Check TIDAK AKAN aktif (tidak akan error, cuma diabaikan Firebase).
+        const RECAPTCHA_V3_SITE_KEY = "6LcyaVstAAAAALDs0qEuENHj3erFsLIkFKxAyecY";
+
+        if (RECAPTCHA_V3_SITE_KEY && RECAPTCHA_V3_SITE_KEY !== "GANTI_DENGAN_SITE_KEY_RECAPTCHA_ANDA") {
+            const appCheck = firebase.appCheck();
+            appCheck.activate(
+                new firebase.appCheck.ReCaptchaV3Provider(RECAPTCHA_V3_SITE_KEY),
+                true // auto-refresh token
+            );
+        } else {
+            console.warn("[App Check] Belum diaktifkan — RECAPTCHA_V3_SITE_KEY masih placeholder.");
+        }
+        // =================================================
+
         const db = firebase.database();
         const auth = firebase.auth();
         const googleProvider = new firebase.auth.GoogleAuthProvider();
