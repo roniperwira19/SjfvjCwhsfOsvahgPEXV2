@@ -2001,8 +2001,9 @@
         
         function downloadLkbbPDF(tier) {
             const { jsPDF } = window.jspdf; const doc = new jsPDF();
-            doc.text(`Peringkat LKBB ${tier} - SCOPEX VOL-II`, 14, 20);
-            
+            doc.setFontSize(14); doc.text(`Peringkat LKBB ${tier} - SCOPEX VOL-II`, 14, 18);
+            doc.setFontSize(8); doc.setTextColor(120); doc.text(`Dicetak: ${new Date().toLocaleString('id-ID')}`, 14, 24); doc.setTextColor(0);
+
             let rekapList = [];
             state.pesertaLkbb.forEach(p => {
                 if (p.kategori === tier) {
@@ -2011,7 +2012,8 @@
                 }
             });
             rekapList.sort((a, b) => b.total - a.total);
-            
+
+            // Halaman 1: tabel ringkasan peringkat
             doc.autoTable({
                 startY: 30,
                 head: [['Rank', 'Sekolah / Basis', 'Nilai Akhir']],
@@ -2020,6 +2022,38 @@
                 styles: { fontSize: 8, font: 'helvetica' },
                 headStyles: { fillColor: tier === 'SD' ? [59, 130, 246] : [168, 85, 247] }
             });
+
+            // Halaman detail: rincian nilai tiap gerakan per pasukan, dari masing-masing Juri
+            const moves = tier === 'SD' ? LKBB_SD_MOVES : LKBB_SMP_MOVES;
+            rekapList.forEach((r, i) => {
+                doc.addPage();
+                doc.setFontSize(12); doc.setTextColor(0);
+                doc.text(`Detail Nilai Gerakan: ${r.pangkalan} (No. ${r.noPeserta})`, 14, 18);
+                doc.setFontSize(8); doc.setTextColor(120);
+                doc.text(`Peringkat #${i + 1} dari kategori ${tier} - Total Nilai: ${r.total}`, 14, 24);
+                doc.setTextColor(0);
+
+                const data = state.nilaiLkbb[r.noPeserta] || {};
+                const body = moves.map(move => {
+                    const j1 = (data.juri1 && data.juri1[move] !== undefined) ? parseFloat(data.juri1[move]) : null;
+                    const j2 = (data.juri2 && data.juri2[move] !== undefined) ? parseFloat(data.juri2[move]) : null;
+                    const jv = (data.vapor && data.vapor[move] !== undefined) ? parseFloat(data.vapor[move]) : null;
+                    const subtotal = [j1, j2, jv].filter(v => v !== null).reduce((a, b) => a + b, 0);
+                    return [move, j1 !== null ? j1 : '-', j2 !== null ? j2 : '-', jv !== null ? jv : '-', subtotal];
+                });
+
+                doc.autoTable({
+                    startY: 30,
+                    head: [['Gerakan', 'Juri 1', 'Juri 2', 'Vapor', 'Subtotal']],
+                    body: body,
+                    theme: 'grid',
+                    styles: { fontSize: 7, font: 'helvetica' },
+                    headStyles: { fillColor: tier === 'SD' ? [59, 130, 246] : [168, 85, 247] },
+                    columnStyles: { 0: { cellWidth: 80 } },
+                    margin: { left: 14, right: 14 }
+                });
+            });
+
             doc.save(`Peringkat_LKBB_${tier}.pdf`);
         }
 
@@ -2092,6 +2126,38 @@
                     margin: { left: 14, right: 14 }
                 });
                 currentY = doc.lastAutoTable.finalY + 8;
+            });
+
+            // Detail nilai tiap gerakan per pasukan, dari masing-masing Juri
+            const moves = tier === 'SD' ? LKBB_SD_MOVES : LKBB_SMP_MOVES;
+            const pasukanTier = state.pesertaLkbb.filter(p => p.kategori === tier);
+            pasukanTier.forEach(p => {
+                doc.addPage();
+                doc.setFontSize(12); doc.setTextColor(0);
+                doc.text(`Detail Nilai Gerakan: ${p.pangkalan} (No. ${p.noPeserta})`, 14, 18);
+                doc.setFontSize(8); doc.setTextColor(120);
+                doc.text(`Total sementara: ${calculateLkbbScore(p.noPeserta)}`, 14, 24);
+                doc.setTextColor(0);
+
+                const data = state.nilaiLkbb[p.noPeserta] || {};
+                const body = moves.map(move => {
+                    const j1 = (data.juri1 && data.juri1[move] !== undefined) ? parseFloat(data.juri1[move]) : null;
+                    const j2 = (data.juri2 && data.juri2[move] !== undefined) ? parseFloat(data.juri2[move]) : null;
+                    const jv = (data.vapor && data.vapor[move] !== undefined) ? parseFloat(data.vapor[move]) : null;
+                    const subtotal = [j1, j2, jv].filter(v => v !== null).reduce((a, b) => a + b, 0);
+                    return [move, j1 !== null ? j1 : '-', j2 !== null ? j2 : '-', jv !== null ? jv : '-', subtotal];
+                });
+
+                doc.autoTable({
+                    startY: 30,
+                    head: [['Gerakan', 'Juri 1', 'Juri 2', 'Vapor', 'Subtotal']],
+                    body: body,
+                    theme: 'grid',
+                    styles: { fontSize: 7, font: 'helvetica' },
+                    headStyles: { fillColor: tier === 'SD' ? [59, 130, 246] : [168, 85, 247] },
+                    columnStyles: { 0: { cellWidth: 80 } },
+                    margin: { left: 14, right: 14 }
+                });
             });
 
             doc.save(`Live_LKBB_${tier}.pdf`);
