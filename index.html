@@ -718,8 +718,11 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-[9px] font-mono text-gray-500 mb-1.5 uppercase">Email Akun</label>
-                            <input type="email" id="akun-email" list="akun-email-list" required class="w-full bg-obsidian-950 border border-obsidian-800 rounded-lg px-3 py-2.5 text-xs text-white focus:border-tech-blue focus:outline-none" placeholder="Pilih dari daftar, atau ketik email baru" autocomplete="off">
-                            <datalist id="akun-email-list"></datalist>
+                            <select id="akun-email-select" onchange="handleAkunEmailSelectChange()" class="w-full bg-obsidian-950 border border-obsidian-800 rounded-lg px-3 py-2.5 text-xs text-white focus:border-tech-blue focus:outline-none mb-2">
+                                <option value="" class="bg-obsidian-900">-- Pilih akun yang menunggu akses --</option>
+                                <option value="__manual__" class="bg-obsidian-900">+ Ketik email lain secara manual</option>
+                            </select>
+                            <input type="email" id="akun-email" required class="hidden w-full bg-obsidian-950 border border-obsidian-800 rounded-lg px-3 py-2.5 text-xs text-white focus:border-tech-blue focus:outline-none" placeholder="email@domain.com" autocomplete="off">
                             <p id="akun-email-hint" class="text-[9px] font-mono text-gray-500 mt-1"></p>
                         </div>
                         <div>
@@ -1461,13 +1464,31 @@
 
         // ================= ADMIN: KELOLA AKUN LOGIN (MAPPING EMAIL -> ROLE) =================
         function renderPendingUsersDatalist() {
-            const list = document.getElementById('akun-email-list');
+            const select = document.getElementById('akun-email-select');
             const hint = document.getElementById('akun-email-hint');
-            if (!list) return;
+            if (!select) return;
             const existingRoleEmails = new Set(Object.values(state.userRoles || {}).map(m => (m.email || '').toLowerCase()));
             const pending = Object.values(state.pendingUsers || {}).filter(u => u.email && !existingRoleEmails.has(u.email.toLowerCase()));
-            list.innerHTML = pending.map(u => `<option value="${escapeHtml(u.email)}">${u.displayName ? escapeHtml(u.displayName) : ''}</option>`).join('');
+
+            const currentValue = select.value;
+            select.innerHTML = `<option value="" class="bg-obsidian-900">-- Pilih akun yang menunggu akses --</option>` +
+                pending.map(u => `<option value="${escapeHtml(u.email)}" class="bg-obsidian-900">${escapeHtml(u.email)}${u.displayName ? ' — ' + escapeHtml(u.displayName) : ''}</option>`).join('') +
+                `<option value="__manual__" class="bg-obsidian-900">+ Ketik email lain secara manual</option>`;
+
+            // Pertahankan pilihan sebelumnya kalau masih ada di daftar
+            if ([...select.options].some(o => o.value === currentValue)) select.value = currentValue;
+
             if (hint) hint.innerText = pending.length > 0 ? `${pending.length} akun sedang menunggu akses` : 'Belum ada akun yang login/daftar dan menunggu akses';
+        }
+
+        function handleAkunEmailSelectChange() {
+            const sel = document.getElementById('akun-email-select');
+            const input = document.getElementById('akun-email');
+            if (sel.value === '__manual__') {
+                input.classList.remove('hidden'); input.value = ''; input.focus();
+            } else {
+                input.classList.add('hidden'); input.value = sel.value;
+            }
         }
 
         function initAkunMateriDropdown() {
@@ -1545,7 +1566,8 @@
                 db.ref(`scopex_data/pendingUsers/${emailKey}`).remove(); // Sudah diberi akses, keluar dari daftar tunggu
                 markSaved(btn, 'Tersimpan');
                 showToast(`Akses untuk ${email} berhasil disimpan`, 'border-l-tech-blue');
-                document.getElementById('akun-email').value = ''; document.getElementById('akun-nama').value = '';
+                document.getElementById('akun-email').value = ''; document.getElementById('akun-email').classList.add('hidden');
+                document.getElementById('akun-email-select').value = ''; document.getElementById('akun-nama').value = '';
             });
         };
 
