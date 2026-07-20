@@ -48,6 +48,22 @@
         ::-webkit-scrollbar-thumb { background: #1f1f23; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #e11d48; }
         .active-sub-item { color: #f59e0b !important; border-left: 2px solid #f59e0b !important; background: rgba(245, 158, 11, 0.04) !important; font-weight: bold !important; }
+
+        /* ================= SIDEBAR COLLAPSE (ICON-ONLY) ================= */
+        @media (min-width: 768px) {
+            #sidebar.sidebar-collapsed { width: 76px !important; }
+            #sidebar.sidebar-collapsed .sidebar-label { display: none !important; }
+            #sidebar.sidebar-collapsed .sidebar-header { justify-content: center; padding-left: 0.75rem; padding-right: 0.75rem; }
+            #sidebar.sidebar-collapsed nav#main-menu-zone > div > button,
+            #sidebar.sidebar-collapsed #sidebar-fallback-text { display: none !important; }
+            #sidebar.sidebar-collapsed nav#main-menu-zone > div { display: flex; justify-content: center; }
+            #sidebar.sidebar-collapsed .sidebar-collapsed-icon-btn { display: flex !important; }
+            #sidebar:not(.sidebar-collapsed) .sidebar-collapsed-icon-btn { display: none !important; }
+            #sidebar.sidebar-collapsed [id^="submenu-"] { display: none !important; }
+            #sidebar.sidebar-collapsed #auth-nav-zone { padding-left: 0.75rem; padding-right: 0.75rem; }
+            #sidebar.sidebar-collapsed #auth-nav-zone > div { justify-content: center; }
+        }
+        /* =================================================================== */
     </style>
 </head>
 <body class="min-h-screen flex flex-col md:flex-row overflow-x-hidden relative">
@@ -80,26 +96,32 @@
 
     <!-- Sidebar: Diperbarui dengan h-[100dvh] untuk menangani masalah address bar pada mobile -->
     <aside id="sidebar" class="hidden fixed inset-y-0 left-0 z-40 w-72 bg-obsidian-900 border-r border-obsidian-800/80 flex-col transform -translate-x-full transition-transform duration-300 ease-in-out md:sticky md:top-0 h-[100dvh] md:h-screen">
-        <div class="p-6 border-b border-obsidian-800 flex items-center gap-3 bg-obsidian-950/40 shrink-0">
+        <div class="p-6 border-b border-obsidian-800 flex items-center gap-3 bg-obsidian-950/40 shrink-0 sidebar-header relative">
             <div class="w-10 h-10 rounded-xl bg-obsidian-950/80 border border-obsidian-800 flex items-center justify-center shadow-md shrink-0 p-1">
                 <img src="https://lh3.googleusercontent.com/d/17iFI9vo1npQGBOPUgDutxl3hOhXrXYYr" alt="Logo SCOPEX" class="w-full h-full object-contain" onerror="this.src='https://placehold.co/100x100/09090b/e11d48?text=S2'">
             </div>
-            <div class="min-w-0">
+            <div class="min-w-0 sidebar-label">
                 <h1 class="text-xs font-display font-bold tracking-widest text-white uppercase truncate">SCOPEX VOL-II</h1>
                 <p class="text-[9px] text-tech-yellow font-mono tracking-widest uppercase truncate">Secure Internal Portal</p>
             </div>
+            <button onclick="toggleSidebarCollapse()" class="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-obsidian-800 border border-obsidian-700 items-center justify-center text-gray-400 hover:text-white hover:bg-obsidian-700 transition-all z-10" title="Perkecil/Perbesar Sidebar">
+                <i id="icon-sidebar-collapse" class="fa-solid fa-chevron-left text-[9px]"></i>
+            </button>
         </div>
 
         <div class="flex-1 px-4 py-6 space-y-6 overflow-y-auto min-h-0">
             <div>
-                <span class="px-3 text-[9px] font-bold uppercase tracking-widest text-gray-500 block mb-3">MENU</span>
+                <span class="px-3 text-[9px] font-bold uppercase tracking-widest text-gray-500 block mb-3 sidebar-label">MENU</span>
                 
                 <nav id="main-menu-zone" class="hidden space-y-2">
                     <!-- Menu 1: Papan Peringkat Materi -->
                     <div id="menu-group-peringkat-materi" class="space-y-1">
                         <button onclick="toggleAccordion('submenu-Peringkat', 'icon-Peringkat')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white hover:bg-obsidian-800/60 transition-all text-left">
-                            <span class="flex items-center gap-3"><i class="fa-solid fa-ranking-star w-4 text-center text-tech-red"></i> Papan Peringkat Materi</span>
-                            <i id="icon-Peringkat" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200"></i>
+                            <span class="flex items-center gap-3"><i class="fa-solid fa-ranking-star w-4 text-center text-tech-red"></i> <span class="sidebar-label">Papan Peringkat Materi</span></span>
+                            <i id="icon-Peringkat" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200 sidebar-label"></i>
+                        </button>
+                        <button onclick="expandAndOpenMenu('submenu-Peringkat', 'icon-Peringkat')" class="sidebar-collapsed-icon-btn hidden w-10 h-10 mx-auto items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-obsidian-800/60 transition-all" title="Papan Peringkat Materi">
+                            <i class="fa-solid fa-ranking-star text-tech-red"></i>
                         </button>
                         <div id="submenu-Peringkat" class="hidden pl-6 space-y-1">
                             <button id="sub-leaderboard-sd" onclick="switchMainView('leaderboard-sd')" class="w-full text-left px-4 py-2 text-[11px] text-gray-400 hover:text-white transition-all rounded-md"><i class="fa-solid fa-circle text-[4px] mr-2"></i> Peringkat Materi SD</button>
@@ -110,8 +132,11 @@
                     <!-- Menu 2: Papan Peringkat LKBB -->
                     <div id="menu-group-peringkat-lkbb" class="space-y-1">
                         <button onclick="toggleAccordion('submenu-lkbb', 'icon-lkbb')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white hover:bg-obsidian-800/60 transition-all text-left">
-                            <span class="flex items-center gap-3"><i class="fa-solid fa-flag w-4 text-center text-tech-blue"></i> Papan Peringkat LKBB</span>
-                            <i id="icon-lkbb" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200"></i>
+                            <span class="flex items-center gap-3"><i class="fa-solid fa-flag w-4 text-center text-tech-blue"></i> <span class="sidebar-label">Papan Peringkat LKBB</span></span>
+                            <i id="icon-lkbb" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200 sidebar-label"></i>
+                        </button>
+                        <button onclick="expandAndOpenMenu('submenu-lkbb', 'icon-lkbb')" class="sidebar-collapsed-icon-btn hidden w-10 h-10 mx-auto items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-obsidian-800/60 transition-all" title="Papan Peringkat LKBB">
+                            <i class="fa-solid fa-flag text-tech-blue"></i>
                         </button>
                         <div id="submenu-lkbb" class="hidden pl-6 space-y-1">
                             <button id="sub-lkbb-sd" onclick="switchMainView('lkbb-sd')" class="w-full text-left px-4 py-2 text-[11px] text-gray-400 hover:text-white transition-all rounded-md"><i class="fa-solid fa-circle text-[4px] mr-2"></i> Peringkat LKBB SD</button>
@@ -122,8 +147,11 @@
                     <!-- Menu 3: Live Mata Materi -->
                     <div id="menu-group-live-materi" class="space-y-1">
                         <button onclick="toggleAccordion('submenu-live', 'icon-live')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white hover:bg-obsidian-800/60 transition-all text-left">
-                            <span class="flex items-center gap-3"><i class="fa-solid fa-satellite-dish w-4 text-center text-tech-yellow"></i> Live Materi</span>
-                            <i id="icon-live" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200"></i>
+                            <span class="flex items-center gap-3"><i class="fa-solid fa-satellite-dish w-4 text-center text-tech-yellow"></i> <span class="sidebar-label">Live Materi</span></span>
+                            <i id="icon-live" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200 sidebar-label"></i>
+                        </button>
+                        <button onclick="expandAndOpenMenu('submenu-live', 'icon-live')" class="sidebar-collapsed-icon-btn hidden w-10 h-10 mx-auto items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-obsidian-800/60 transition-all" title="Live Materi">
+                            <i class="fa-solid fa-satellite-dish text-tech-yellow"></i>
                         </button>
                         <div id="submenu-live" class="hidden pl-6 space-y-1">
                             <button id="sub-live-sd" onclick="switchMainView('live-sd')" class="w-full text-left px-4 py-2 text-[11px] text-gray-400 hover:text-white transition-all rounded-md"><i class="fa-solid fa-circle text-[4px] mr-2"></i> Live Materi SD</button>
@@ -134,8 +162,11 @@
                     <!-- Menu 4: Live LKBB -->
                     <div id="menu-group-live-lkbb" class="space-y-1">
                         <button onclick="toggleAccordion('submenu-live-lkbb', 'icon-live-lkbb')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white hover:bg-obsidian-800/60 transition-all text-left">
-                            <span class="flex items-center gap-3"><i class="fa-solid fa-video w-4 text-center text-purple-400"></i> Live LKBB</span>
-                            <i id="icon-live-lkbb" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200"></i>
+                            <span class="flex items-center gap-3"><i class="fa-solid fa-video w-4 text-center text-purple-400"></i> <span class="sidebar-label">Live LKBB</span></span>
+                            <i id="icon-live-lkbb" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200 sidebar-label"></i>
+                        </button>
+                        <button onclick="expandAndOpenMenu('submenu-live-lkbb', 'icon-live-lkbb')" class="sidebar-collapsed-icon-btn hidden w-10 h-10 mx-auto items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-obsidian-800/60 transition-all" title="Live LKBB">
+                            <i class="fa-solid fa-video text-purple-400"></i>
                         </button>
                         <div id="submenu-live-lkbb" class="hidden pl-6 space-y-1">
                             <button id="sub-live-lkbb-sd" onclick="switchMainView('live-lkbb-sd')" class="w-full text-left px-4 py-2 text-[11px] text-gray-400 hover:text-white transition-all rounded-md"><i class="fa-solid fa-circle text-[4px] mr-2"></i> Live LKBB SD</button>
@@ -146,8 +177,11 @@
                     <!-- Menu 5: Control Panel Admin & Juri -->
                     <div id="admin-menu-container" class="hidden space-y-1">
                         <button onclick="toggleAccordion('submenu-admin', 'icon-admin')" class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white hover:bg-obsidian-800/60 transition-all text-left">
-                            <span class="flex items-center gap-3"><i class="fa-solid fa-terminal w-4 text-center text-white"></i> Panel Juri & Admin</span>
-                            <i id="icon-admin" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200"></i>
+                            <span class="flex items-center gap-3"><i class="fa-solid fa-terminal w-4 text-center text-white"></i> <span class="sidebar-label">Panel Juri & Admin</span></span>
+                            <i id="icon-admin" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200 sidebar-label"></i>
+                        </button>
+                        <button onclick="expandAndOpenMenu('submenu-admin', 'icon-admin')" class="sidebar-collapsed-icon-btn hidden w-10 h-10 mx-auto items-center justify-center rounded-lg text-gray-400 hover:text-white hover:bg-obsidian-800/60 transition-all" title="Panel Juri & Admin">
+                            <i class="fa-solid fa-terminal text-white"></i>
                         </button>
                         <div id="submenu-admin" class="hidden pl-6 space-y-1">
                             <button id="sub-admin-regis" onclick="switchMainView('admin-regis')" class="id-admin-only w-full text-left px-4 py-2 text-[11px] text-gray-400 hover:text-white transition-all rounded-md"><i class="fa-solid fa-user-plus text-[10px] mr-2 text-tech-red"></i> Regis Peserta</button>
@@ -234,7 +268,7 @@
                     <div class="flex-1 h-px bg-obsidian-800"></div>
                 </div>
 
-                <button type="button" onclick="handleGoogleLogin()" class="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-obsidian-950 font-display font-bold py-3 rounded-lg transition-all text-xs tracking-widest uppercase shadow-lg">
+                <button type="button" id="google-login-btn" onclick="handleGoogleLogin()" class="w-full flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-obsidian-950 font-display font-bold py-3 rounded-lg transition-all text-xs tracking-widest uppercase shadow-lg">
                     <svg class="w-4 h-4" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.5 6 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.5 18.9 12 24 12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.5 6 29.5 4 24 4c-7.5 0-13.9 4.3-17.1 10.7z"/><path fill="#4CAF50" d="M24 44c5.4 0 10.3-1.9 14-5.7l-6.5-5.5c-2 1.5-4.6 2.4-7.5 2.4-5.3 0-9.7-3.4-11.3-8.1l-6.6 5.1C9.9 39.6 16.4 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.4l6.5 5.5C41.5 35.9 44 30.4 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
                     Masuk dengan Google
                 </button>
@@ -551,7 +585,7 @@
         <!-- SECTION: ADMIN INPUT NILAI -->
         <section id="view-admin-Nilai" class="hidden flex-col gap-6 w-full z-10 max-w-4xl mx-auto">
             <div class="pb-4 border-b border-obsidian-800">
-                <h2 class="text-xl font-display font-bold text-white tracking-widest uppercase">Input Nilai Materi, LKBB dan Variasi Formasi</h2>
+                <h2 class="text-xl font-display font-bold text-white tracking-widest uppercase">Input Nilai LKBB dan Variasi Formasi</h2>
                 <p class="text-xs text-gray-400 font-mono mt-1" id="score-desc">> Input atau Ubah Nilai Secara Realtime</p>
             </div>
 
@@ -684,7 +718,9 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-[9px] font-mono text-gray-500 mb-1.5 uppercase">Email Akun</label>
-                            <input type="email" id="akun-email" required class="w-full bg-obsidian-950 border border-obsidian-800 rounded-lg px-3 py-2.5 text-xs text-white focus:border-tech-blue focus:outline-none" placeholder="user@email.com">
+                            <input type="email" id="akun-email" list="akun-email-list" required class="w-full bg-obsidian-950 border border-obsidian-800 rounded-lg px-3 py-2.5 text-xs text-white focus:border-tech-blue focus:outline-none" placeholder="Pilih dari daftar, atau ketik email baru" autocomplete="off">
+                            <datalist id="akun-email-list"></datalist>
+                            <p id="akun-email-hint" class="text-[9px] font-mono text-gray-500 mt-1"></p>
                         </div>
                         <div>
                             <label class="block text-[9px] font-mono text-gray-500 mb-1.5 uppercase">Nama Tampilan (Opsional)</label>
@@ -769,7 +805,7 @@
         // Selama masih placeholder ini, App Check TIDAK AKAN aktif (tidak akan error, cuma diabaikan Firebase).
         const RECAPTCHA_V3_SITE_KEY = "6LcyaVstAAAAALDs0qEuENHj3erFsLIkFKxAyecY";
 
-        if (RECAPTCHA_V3_SITE_KEY && RECAPTCHA_V3_SITE_KEY !== "6LcyaVstAAAAALDs0qEuENHj3erFsLIkFKxAyecY") {
+        if (RECAPTCHA_V3_SITE_KEY && RECAPTCHA_V3_SITE_KEY !== "GANTI_DENGAN_SITE_KEY_RECAPTCHA_ANDA") {
             const appCheck = firebase.appCheck();
             appCheck.activate(
                 new firebase.appCheck.ReCaptchaV3Provider(RECAPTCHA_V3_SITE_KEY),
@@ -799,12 +835,12 @@
         }
 
         // ================= INDIKATOR STATUS SIMPAN (Menyimpan.../Tersimpan) =================
-        function markSaving(btn) {
+        function markSaving(btn, label) {
             if (!btn) return;
             btn.dataset.originalText = btn.innerHTML;
             btn.disabled = true;
             btn.classList.add('opacity-70', 'cursor-not-allowed');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Menyimpan...';
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> ${label || 'Menyimpan...'}`;
         }
         function markSaved(btn, label) {
             if (!btn) return;
@@ -861,7 +897,8 @@
             nilaiLkbb: {}, 
             passwords: {},
             profiles: {}, // Menyimpan data profil user
-            userRoles: {} // Menyimpan mapping akun email -> role (Firebase Auth)
+            userRoles: {}, // Menyimpan mapping akun email -> role (Firebase Auth)
+            pendingUsers: {} // Akun yang sudah login/daftar tapi belum diberi role
         };
         
         let tempAvatarBase64 = null; // Menyimpan Base64 file gambar sementara
@@ -951,6 +988,7 @@
             state.passwords = cloudData.config?.passwords || {};
             state.profiles = cloudData.profiles || {};
             state.userRoles = cloudData.userRoles || {};
+            state.pendingUsers = cloudData.pendingUsers || {};
             
             if (state.user.role !== 'guest') renderAuthUI(); // Update UI bila profil (avatar/name) berubah di tempat lain
             updateAdminPesertaDropdown();
@@ -961,12 +999,13 @@
             renderLiveLkbbTables();
             generateAutomatedNoPeserta();
             generateAutomatedNoPesertaLkbb();
-            if (state.user.role === 'admin') renderAkunTable();
+            if (state.user.role === 'admin') { renderAkunTable(); renderPendingUsersDatalist(); }
         });
 
         document.addEventListener("DOMContentLoaded", () => {
             initMateriDropdownOptions();
             initAkunMateriDropdown();
+            applySidebarCollapseState();
             renderAuthUI();
             checkGateRoute();
             document.getElementById('score-peserta-lkbb').addEventListener('change', populateLkbbScores);
@@ -987,6 +1026,28 @@
             if (sidebar.classList.contains('-translate-x-full')) { sidebar.classList.remove('-translate-x-full', 'hidden'); overlay.classList.remove('hidden'); } 
             else { sidebar.classList.add('-translate-x-full'); if (window.innerWidth < 768) sidebar.classList.add('hidden'); overlay.classList.add('hidden'); }
         }
+
+        // ================= SIDEBAR COLLAPSE (DESKTOP, ICON-ONLY) =================
+        function applySidebarCollapseState() {
+            const sidebar = document.getElementById('sidebar');
+            const icon = document.getElementById('icon-sidebar-collapse');
+            const isCollapsed = localStorage.getItem('scopex_sidebar_collapsed') === '1';
+            sidebar.classList.toggle('sidebar-collapsed', isCollapsed);
+            sidebar.classList.toggle('w-72', !isCollapsed);
+            if (icon) icon.className = `fa-solid ${isCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'} text-[9px]`;
+        }
+        function toggleSidebarCollapse() {
+            const nowCollapsed = !document.getElementById('sidebar').classList.contains('sidebar-collapsed');
+            localStorage.setItem('scopex_sidebar_collapsed', nowCollapsed ? '1' : '0');
+            applySidebarCollapseState();
+        }
+        function expandAndOpenMenu(submenuId, iconId) {
+            localStorage.setItem('scopex_sidebar_collapsed', '0');
+            applySidebarCollapseState();
+            const submenu = document.getElementById(submenuId);
+            if (submenu && submenu.classList.contains('hidden')) toggleAccordion(submenuId, iconId);
+        }
+        // =================================================
 
         function togglePasswordVisibility(inputId, iconId) {
             const input = document.getElementById(inputId); const icon = document.getElementById(iconId);
@@ -1019,7 +1080,7 @@
             if (targetEl) { targetEl.classList.remove('hidden'); targetEl.classList.add('flex'); }
             
             if (targetView === 'profil') loadProfilData();
-            if (targetView === 'admin-akun') { renderAkunTable(); handleAkunRoleChange(); }
+            if (targetView === 'admin-akun') { renderAkunTable(); renderPendingUsersDatalist(); handleAkunRoleChange(); }
             
             if (window.innerWidth < 768 && targetView !== 'login') toggleSidebar();
         }
@@ -1184,7 +1245,7 @@
                                     <i class="fa-solid fa-gear text-[10px] text-white"></i>
                                 </div>
                             </div>
-                            <div class="flex flex-col min-w-0">
+                            <div class="flex flex-col min-w-0 sidebar-label">
                                 <span class="text-[8px] font-mono ${roleColor} uppercase tracking-widest truncate">Auth: ${state.user.role}</span>
                                 <span class="text-xs font-bold text-white truncate">${escapeHtml(displayName)}</span>
                             </div>
@@ -1326,26 +1387,30 @@
             const email = document.getElementById('login-email').value.trim();
             const pass = document.getElementById('login-password').value;
             const submitBtn = document.getElementById('login-submit-btn');
-            submitBtn.disabled = true;
 
             if (isRegisterMode) {
                 const confirmPass = document.getElementById('login-password-confirm').value;
-                if (pass !== confirmPass) { showLoginError('Konfirmasi password tidak cocok.'); submitBtn.disabled = false; return; }
+                if (pass !== confirmPass) { showLoginError('Konfirmasi password tidak cocok.'); return; }
+                markSaving(submitBtn, 'Mendaftar...');
                 auth.createUserWithEmailAndPassword(email, pass)
                     .then(() => { showToast('Akun berhasil dibuat. Menunggu aktivasi Admin.', 'border-l-tech-blue'); })
                     .catch(err => showLoginError(mapAuthErrorMessage(err)))
-                    .finally(() => submitBtn.disabled = false);
+                    .finally(() => restoreButton(submitBtn));
             } else {
+                markSaving(submitBtn, 'Memproses...');
                 auth.signInWithEmailAndPassword(email, pass)
                     .catch(err => showLoginError(mapAuthErrorMessage(err)))
-                    .finally(() => submitBtn.disabled = false);
+                    .finally(() => restoreButton(submitBtn));
             }
         };
 
         function handleGoogleLogin() {
             document.getElementById('login-error').classList.add('hidden');
+            const btn = document.getElementById('google-login-btn');
+            markSaving(btn, 'Menghubungkan ke Google...');
             auth.signInWithPopup(googleProvider)
-                .catch(err => showLoginError(mapAuthErrorMessage(err)));
+                .catch(err => showLoginError(mapAuthErrorMessage(err)))
+                .finally(() => restoreButton(btn));
         }
 
         // Dipanggil setiap status login Firebase Auth berubah (login, daftar, refresh halaman, logout)
@@ -1361,6 +1426,12 @@
             db.ref(`scopex_data/userRoles/${emailKey}`).once('value').then(snap => {
                 const mapping = snap.val();
                 if (!mapping || !mapping.role) {
+                    // Catat ke daftar "menunggu akses" supaya Admin bisa pilih dari dropdown, bukan ketik manual
+                    db.ref(`scopex_data/pendingUsers/${emailKey}`).set({
+                        email: fbUser.email,
+                        displayName: fbUser.displayName || null,
+                        lastAttempt: Date.now()
+                    }).catch(() => {});
                     showModal('Akses Belum Aktif', `Akun <b>${escapeHtml(fbUser.email)}</b> berhasil masuk, namun belum diberi akses oleh Admin. Silakan hubungi Admin SCOPEX VOL-II untuk aktivasi akun.`, 'warning');
                     auth.signOut();
                     return;
@@ -1389,6 +1460,16 @@
         // =================================================
 
         // ================= ADMIN: KELOLA AKUN LOGIN (MAPPING EMAIL -> ROLE) =================
+        function renderPendingUsersDatalist() {
+            const list = document.getElementById('akun-email-list');
+            const hint = document.getElementById('akun-email-hint');
+            if (!list) return;
+            const existingRoleEmails = new Set(Object.values(state.userRoles || {}).map(m => (m.email || '').toLowerCase()));
+            const pending = Object.values(state.pendingUsers || {}).filter(u => u.email && !existingRoleEmails.has(u.email.toLowerCase()));
+            list.innerHTML = pending.map(u => `<option value="${escapeHtml(u.email)}">${u.displayName ? escapeHtml(u.displayName) : ''}</option>`).join('');
+            if (hint) hint.innerText = pending.length > 0 ? `${pending.length} akun sedang menunggu akses` : 'Belum ada akun yang login/daftar dan menunggu akses';
+        }
+
         function initAkunMateriDropdown() {
             const select = document.getElementById('akun-materi'); if (!select) return; select.innerHTML = "";
             Materi_LIST.forEach(l => { select.innerHTML += `<option value="${l}" class="bg-obsidian-900">${l}</option>`; });
@@ -1456,9 +1537,13 @@
 
             const emailKey = sanitizeEmailKey(email);
             const payload = { email, role, sessionKey, username, targetMateri, juriId, targetLkbb };
+            const btn = e.target.querySelector('button[type="submit"]');
 
+            markSaving(btn, 'Menyimpan Akses...');
             db.ref(`scopex_data/userRoles/${emailKey}`).set(payload, (error) => {
-                if (error) { showModal('Error', 'Gagal menyimpan akses akun.', 'error'); return; }
+                if (error) { markFailed(btn); showModal('Error', 'Gagal menyimpan akses akun.', 'error'); return; }
+                db.ref(`scopex_data/pendingUsers/${emailKey}`).remove(); // Sudah diberi akses, keluar dari daftar tunggu
+                markSaved(btn, 'Tersimpan');
                 showToast(`Akses untuk ${email} berhasil disimpan`, 'border-l-tech-blue');
                 document.getElementById('akun-email').value = ''; document.getElementById('akun-nama').value = '';
             });
@@ -1992,4 +2077,3 @@
     </script>
 </body>
 </html>
-
